@@ -1,0 +1,38 @@
+# Claude Code — ignore local/secret config, keep shared commands/skills
+.claude/settings.local.json
+.claude/*.local.json
+.mcp.json
+
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# Compiled class files / logs
+*.class
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# Eclipse (in case you ever open it there)
+.classpath
+.project
+.settings/
+bin/
+
+# OS cruft
+Thumbs.db
+Desktop.ini
+
+# Local env / secrets — important for a Discord bot!
+.env
+*.local.properties
+application-local.properties
+src/main/resources/secrets.properties
