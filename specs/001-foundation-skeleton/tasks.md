@@ -215,8 +215,9 @@ and answers `/ping` identically to the host run.
 - [X] T033 [P] Run `./mvnw spotless:apply` and commit formatting
 - [X] T034 [P] Verify fail-fast error messages are clear and secret-free for missing `DISCORD_TOKEN`/
   `DB_PASSWORD` and unreachable Postgres (spec FR-005/FR-007, SC-006)
-- [ ] T035 Run the full `quickstart.md` validation checklist end to end (SC-001..SC-006) and fix any
-  gaps
+- [X] T035 Run the full `quickstart.md` validation checklist end to end (SC-001..SC-006) and fix any
+  gaps — `/ping` verified live in a real server (join → auto-register → invoke → Postgres read →
+  reply, server-scoped). Remaining: SC-004 (CI pass/fail) is exercised once a PR runs the workflow.
 
 ---
 
