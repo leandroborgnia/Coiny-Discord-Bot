@@ -1,0 +1,8 @@
+# Dev profile: app runs on the host against the dockerized Postgres from compose.yaml.
+spring:
+  jpa:
+    show-sql: true
+logging:
+  level:
+    org.flywaydb: INFO
+    net.dv8tion.jda: INFO

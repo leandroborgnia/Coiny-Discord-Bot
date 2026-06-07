@@ -1,0 +1,37 @@
+# Prod / parity: app + Postgres both in Docker, built from the single multi-stage Dockerfile.
+# Uses a SEPARATE volume and host port from dev (compose.yaml) so the two never share data.
+# All values come from the environment; no secret is committed.
+services:
+  postgres:
+    image: postgres:17
+    container_name: coiny-postgres-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME:-coiny}
+      POSTGRES_USER: ${DB_USERNAME:-coiny}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - coiny-pgdata-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-coiny} -d ${DB_NAME:-coiny}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    image: coiny-bot
+    container_name: coiny-bot-prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-coiny}
+      DB_USERNAME: ${DB_USERNAME:-coiny}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+
+volumes:
+  coiny-pgdata-prod:

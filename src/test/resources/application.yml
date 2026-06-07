@@ -1,0 +1,7 @@
+# Integration tests: no Discord gateway, real Postgres provided by Testcontainers @ServiceConnection.
+discord:
+  enabled: false
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate

@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: coiny-bot
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+discord:
+  enabled: true
+  token: ${DISCORD_TOKEN}
+  guild-id: ${DISCORD_GUILD_ID:}

@@ -34,20 +34,20 @@ on lives in Setup + Foundational; each story phase is an independently testable 
 
 **Purpose**: Project initialization and build tooling
 
-- [ ] T001 Create the Maven project at `pom.xml` (+ `mvnw`/`mvnw.cmd`/`.mvn/`): Java 21, Spring Boot
+- [X] T001 Create the Maven project at `pom.xml` (+ `mvnw`/`mvnw.cmd`/`.mvn/`): Java 21, Spring Boot
   3.3.x parent, dependencies `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`,
   `net.dv8tion:JDA:5.0.x`, `flyway-core`, `flyway-database-postgresql`, `org.postgresql:postgresql`;
   test dependencies `spring-boot-starter-test` (JUnit 5 + Mockito + AssertJ),
   `org.testcontainers:postgresql` + `org.testcontainers:junit-jupiter`
-- [ ] T002 [P] Create the hexagonal package skeleton under `src/main/java/bot/`: `domain/liveness`,
+- [X] T002 [P] Create the hexagonal package skeleton under `src/main/java/bot/`: `domain/liveness`,
   `application/liveness`, `discord/command`, `infrastructure/discord`, `infrastructure/persistence`
   (empty `package-info.java` placeholders are acceptable)
-- [ ] T003 [P] Configure the Spotless Maven plugin (google-java-format) in `pom.xml` so
+- [X] T003 [P] Configure the Spotless Maven plugin (google-java-format) in `pom.xml` so
   `./mvnw spotless:check` runs in `verify`
-- [ ] T004 [P] Create `.gitignore` (ignore `target/`, `.env`, IDE files) and `.env.example`
+- [X] T004 [P] Create `.gitignore` (ignore `target/`, `.env`, IDE files) and `.env.example`
   documenting `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`,
   `SPRING_PROFILES_ACTIVE` per `contracts/configuration.md`
-- [ ] T005 [P] Create the Spring Boot entry point `src/main/java/bot/CoinyBotApplication.java`
+- [X] T005 [P] Create the Spring Boot entry point `src/main/java/bot/CoinyBotApplication.java`
   (`@SpringBootApplication`, base package `bot`)
 
 ---
@@ -59,32 +59,32 @@ gateway, command routing, and the test harness.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T006 Create `compose.yaml` for dev: a single `postgres:17` service with a dev port and a
+- [X] T006 Create `compose.yaml` for dev: a single `postgres:17` service with a dev port and a
   **dev-only** named volume, password from `DB_PASSWORD` (app runs on the host)
-- [ ] T007 Create `src/main/resources/application.yml`: DataSource from `${DB_URL}`/`${DB_USERNAME}`/
+- [X] T007 Create `src/main/resources/application.yml`: DataSource from `${DB_URL}`/`${DB_USERNAME}`/
   `${DB_PASSWORD}` (no committed secret defaults), Hibernate `ddl-auto: validate`, Flyway enabled,
   fail-fast on missing required config — per `contracts/configuration.md`
-- [ ] T008 [P] Create `src/main/resources/application-dev.yml` for the `dev` profile (host →
+- [X] T008 [P] Create `src/main/resources/application-dev.yml` for the `dev` profile (host →
   dockerized Postgres from `compose.yaml`, SQL logging as desired)
-- [ ] T009 [P] Create the immutable Flyway migration
+- [X] T009 [P] Create the immutable Flyway migration
   `src/main/resources/db/migration/V1__init_liveness.sql`: create `health_check (id smallint PK,
   label text not null, created_at timestamptz not null default now())` and seed
   `(1, 'ok') ON CONFLICT (id) DO NOTHING` — per `data-model.md`
-- [ ] T010 [P] Create `src/main/java/bot/infrastructure/discord/JdaConfig.java`: build the `JDA`
+- [X] T010 [P] Create `src/main/java/bot/infrastructure/discord/JdaConfig.java`: build the `JDA`
   bean from `DISCORD_TOKEN` (fail fast with a clear error if missing), enable required intents,
   register the interaction router as an event listener
-- [ ] T011 Create the handler SPI `src/main/java/bot/discord/command/SlashCommandHandler.java`
+- [X] T011 Create the handler SPI `src/main/java/bot/discord/command/SlashCommandHandler.java`
   (command name + `CommandData` + `handle(SlashCommandInteractionEvent)`)
-- [ ] T012 Create `src/main/java/bot/infrastructure/discord/InteractionRouter.java` (JDA listener)
+- [X] T012 Create `src/main/java/bot/infrastructure/discord/InteractionRouter.java` (JDA listener)
   that dispatches each `SlashCommandInteractionEvent` to the matching `SlashCommandHandler` bean
   (depends on T011)
-- [ ] T013 Create `src/main/java/bot/infrastructure/discord/SlashCommandRegistrar.java` that, on
+- [X] T013 Create `src/main/java/bot/infrastructure/discord/SlashCommandRegistrar.java` that, on
   `ReadyEvent`, upserts all `SlashCommandHandler` beans' command data to the guild
   `DISCORD_GUILD_ID` (idempotent upsert) (depends on T011)
-- [ ] T014 [P] Create `src/test/java/bot/support/AbstractPostgresIntegrationTest.java`: a
+- [X] T014 [P] Create `src/test/java/bot/support/AbstractPostgresIntegrationTest.java`: a
   Testcontainers `postgres:17` base wiring Spring's DataSource (e.g. `@DynamicPropertySource`) so
   integration tests run against a real throwaway Postgres on the host
-- [ ] T015 Create `src/test/java/bot/StartupIntegrationTest.java` (startup + restart-safety): boots
+- [X] T015 Create `src/test/java/bot/StartupIntegrationTest.java` (startup + restart-safety): boots
   the context against the Testcontainers Postgres and asserts (a) Flyway applied `V1` and the seeded
   `health_check` row exists; and (b) **restart idempotency** — re-invoking `Flyway.migrate()` applies
   **0** new migrations, `flyway.info()` shows `V1` = Success with **0 pending**, and
@@ -106,26 +106,26 @@ success response confirming data-store reachability within the interaction-respo
 
 ### Tests for User Story 1 ⚠️ (write first, ensure they fail before implementation)
 
-- [ ] T016 [P] [US1] Unit test `src/test/java/bot/application/liveness/LivenessServiceTest.java`:
+- [X] T016 [P] [US1] Unit test `src/test/java/bot/application/liveness/LivenessServiceTest.java`:
   mock `LivenessProbePort` with Mockito, assert (AssertJ) that `check(...)` maps `up`/`down`
   `LivenessStatus` to the correct `CheckLivenessResult`
-- [ ] T017 [P] [US1] Integration test
+- [X] T017 [P] [US1] Integration test
   `src/test/java/bot/infrastructure/persistence/JpaLivenessProbeAdapterTest.java` (extends the
   Testcontainers base): asserts the adapter reads the seeded row and returns `LivenessStatus.up("ok")`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Create the domain value object
+- [X] T018 [P] [US1] Create the domain value object
   `src/main/java/bot/domain/liveness/LivenessStatus.java` (record: `boolean reachable`,
   `String detail`; factories `up`/`down`) — pure Java, no framework imports
-- [ ] T019 [P] [US1] Create the domain port
+- [X] T019 [P] [US1] Create the domain port
   `src/main/java/bot/domain/liveness/LivenessProbePort.java` (`LivenessStatus probe()`) — pure Java
-- [ ] T020 [P] [US1] Create the JPA entity
+- [X] T020 [P] [US1] Create the JPA entity
   `src/main/java/bot/infrastructure/persistence/HealthCheckEntity.java` mapping table `health_check`
   (`id`, `label`, `created_at` as `Instant`)
-- [ ] T021 [US1] Create the Spring Data repository
+- [X] T021 [US1] Create the Spring Data repository
   `src/main/java/bot/infrastructure/persistence/HealthCheckJpaRepository.java` (depends on T020)
-- [ ] T022 [US1] Create the **non-transactional** adapter
+- [X] T022 [US1] Create the **non-transactional** adapter
   `src/main/java/bot/infrastructure/persistence/JpaLivenessProbeAdapter.java` implementing
   `LivenessProbePort` (no `@Transactional`). Inject the `DataSource` and `HealthCheckJpaRepository`.
   In `probe()`: first verify connectivity with `try (Connection c = dataSource.getConnection()) {…}`
@@ -134,16 +134,16 @@ success response confirming data-store reachability within the interaction-respo
   or `DataAccessException` to `down(...)`. Never throws for a down/unreachable store, so no
   transaction or `SQLException` can leak to `PingCommand` (resolves analyze finding U1)
   (depends on T019, T021)
-- [ ] T023 [P] [US1] Create request/result records
+- [X] T023 [P] [US1] Create request/result records
   `src/main/java/bot/application/liveness/CheckLivenessRequest.java` and
   `CheckLivenessResult.java` (`boolean reachable`, `String detail`) per `contracts/application-services.md`
-- [ ] T024 [US1] Create the application service
+- [X] T024 [US1] Create the application service
   `src/main/java/bot/application/liveness/LivenessService.java` (`@Service`, **NOT** `@Transactional`):
   depends on `LivenessProbePort`; pure delegation + mapping of `LivenessStatus` →
   `CheckLivenessResult`. It must not be transactional — a transactional proxy would acquire the
   connection before the method body and a down database would throw before mapping (analyze finding
   U1); connectivity/error handling lives in the adapter (T022) (depends on T019, T023)
-- [ ] T025 [US1] Create the thin handler `src/main/java/bot/discord/command/PingCommand.java`
+- [X] T025 [US1] Create the thin handler `src/main/java/bot/discord/command/PingCommand.java`
   implementing `SlashCommandHandler`: `event.deferReply()` first, delegate to `LivenessService`,
   then `getHook().editOriginal(...)` rendering success/non-success from the always-present
   `CheckLivenessResult` (`reachable=false` yields the non-success reply — no exception path) — no
@@ -160,11 +160,11 @@ success response confirming data-store reachability within the interaction-respo
 **Independent Test**: On a clean checkout, follow only the README steps and reach a running bot that
 answers `/ping`.
 
-- [ ] T026 [US2] Create repo-root `README.md` with a "Local setup" section: prerequisites (Docker,
+- [X] T026 [US2] Create repo-root `README.md` with a "Local setup" section: prerequisites (Docker,
   JDK 21), `Copy-Item .env.example .env` + fill secrets, `docker compose up -d`,
   `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`, invite bot, run `/ping` — mirroring
   `quickstart.md` §1–§4
-- [ ] T027 [US2] Cross-check `.env.example` against `contracts/configuration.md` and document the
+- [X] T027 [US2] Cross-check `.env.example` against `contracts/configuration.md` and document the
   reset/stop commands (`docker compose down`, `docker compose down -v`) in the README
 
 **Checkpoint**: A second machine reaches a running bot from the README alone (spec SC-001).
@@ -179,9 +179,9 @@ reported and blocks merge.
 **Independent Test**: Open a PR with a deliberately failing test → CI reports failure and merge is
 blocked; a healthy PR → CI passes.
 
-- [ ] T028 [US3] Create `.github/workflows/ci.yml`: on `pull_request`, checkout, set up JDK 21,
+- [X] T028 [US3] Create `.github/workflows/ci.yml`: on `pull_request`, checkout, set up JDK 21,
   run `./mvnw -q verify` (host Docker backs Testcontainers; no Docker-in-Docker)
-- [ ] T029 [US3] Document in `README.md` the required-status-check / branch-protection expectation
+- [X] T029 [US3] Document in `README.md` the required-status-check / branch-protection expectation
   (CI must pass before merge) per spec FR-012/SC-004
 
 **Checkpoint**: PR checks report clear pass/fail and gate merges (spec SC-004).
@@ -195,10 +195,10 @@ blocked; a healthy PR → CI passes.
 **Independent Test**: Build the image, launch via `compose.prod.yaml`, and confirm the bot is online
 and answers `/ping` identically to the host run.
 
-- [ ] T030 [US4] Create the single multi-stage `Dockerfile`: build stage runs
+- [X] T030 [US4] Create the single multi-stage `Dockerfile`: build stage runs
   `./mvnw -q -DskipTests package`; runtime stage on a slim JRE copies and runs the Spring Boot jar
-- [ ] T031 [P] [US4] Create `.dockerignore` (exclude `target/` build noise, `.git`, `.env`)
-- [ ] T032 [US4] Create `compose.prod.yaml`: app (built from the Dockerfile) + `postgres:17` with
+- [X] T031 [P] [US4] Create `.dockerignore` (exclude `target/` build noise, `.git`, `.env`)
+- [X] T032 [US4] Create `compose.prod.yaml`: app (built from the Dockerfile) + `postgres:17` with
   **separate** ports and a **separate** named volume from `compose.yaml` (never shared), all values
   from env
 
@@ -209,8 +209,8 @@ and answers `/ping` identically to the host run.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T033 [P] Run `./mvnw spotless:apply` and commit formatting
-- [ ] T034 [P] Verify fail-fast error messages are clear and secret-free for missing `DISCORD_TOKEN`/
+- [X] T033 [P] Run `./mvnw spotless:apply` and commit formatting
+- [X] T034 [P] Verify fail-fast error messages are clear and secret-free for missing `DISCORD_TOKEN`/
   `DB_PASSWORD` and unreachable Postgres (spec FR-005/FR-007, SC-006)
 - [ ] T035 Run the full `quickstart.md` validation checklist end to end (SC-001..SC-006) and fix any
   gaps
