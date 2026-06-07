@@ -16,16 +16,24 @@ constraints into concrete, buildable choices, with rationale and rejected altern
   reactive model the rest of the stack does not use. Running JDA outside Spring — rejected, loses
   dependency injection and coordinated shutdown.
 
-## Decision 2 — Slash-command registration: guild commands against a test guild
+## Decision 2 — Slash-command registration: guild commands to every server the bot is in
 
-- **Decision**: On JDA ready, upsert the `/ping` command. For fast iteration register it as a
-  **guild** command against a configured `DISCORD_GUILD_ID` (instant availability) rather than a
-  global command (up to ~1h propagation). `SlashCommandRegistrar` upserts the set of
-  `SlashCommandHandler` beans' command data.
-- **Rationale**: The spec's verification uses a single test server; guild commands appear
-  immediately, making manual verification of the liveness scenario reliable and fast.
-- **Alternatives considered**: Global commands — rejected for the foundation due to propagation
-  delay; can be revisited when the bot ships to many servers.
+- **Decision**: The bot is multi-server by design — there is no configured single guild id. On
+  `ReadyEvent`, `SlashCommandRegistrar` enumerates `jda.getGuilds()` and upserts the
+  `SlashCommandHandler` beans' command data to **each** guild; on `GuildJoinEvent` it registers the
+  commands to the newly-joined guild. JDA receives guild and join events by default (the raw GUILDS
+  data is always on), so `getGuilds()` is populated and `GuildJoinEvent` fires without any extra
+  intent.
+- **Rationale**: Guild-scoped registration is instant in every server (good for testing and for
+  users who interact through different servers), and registering on join keeps new servers covered.
+  Each interaction is handled in the server it originated from (JDA replies in the same
+  guild/channel), so per-server behavior needs no extra wiring now and the future data model can key
+  on the interaction's guild id.
+- **Alternatives considered**: A single configured `DISCORD_GUILD_ID` — rejected: it pins the bot to
+  one server, contrary to the multi-server model. Global commands — also make a command available in
+  all servers and auto-cover future joins with less code, but new/changed global commands can take
+  minutes (historically up to ~1h) to propagate, which is poor for immediate verification; can be
+  revisited at larger scale.
 
 ## Decision 3 — Thin handler pattern: defer-first, delegate, edit reply
 
@@ -79,9 +87,9 @@ constraints into concrete, buildable choices, with rationale and rejected altern
 
 ## Decision 7 — Secret & config strategy: env vars + Spring profiles
 
-- **Decision**: `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` come from
-  environment variables, referenced in `application.yml` via `${ENV}` placeholders with no committed
-  defaults for secrets. Dev vs prod differ only by Spring profile (`dev`) + env values + a compose
+- **Decision**: `DISCORD_TOKEN`, `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` come from environment
+  variables, referenced in `application.yml` via `${ENV}` placeholders with no committed defaults for
+  secrets. Dev vs prod differ only by Spring profile (`dev`) + env values + a compose
   override. `.env.example` documents the variables; the real `.env` is git-ignored.
 - **Rationale**: Constitution Principle VII and Containerization section; spec FR-006. Profiles +
   env vars keep one Dockerfile and one codebase across environments.

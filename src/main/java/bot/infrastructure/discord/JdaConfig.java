@@ -2,6 +2,7 @@ package bot.infrastructure.discord;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,10 +28,13 @@ public class JdaConfig {
       throw new IllegalStateException(
           "DISCORD_TOKEN must be provided (set it in the environment; never commit it)");
     }
+    // JDA always receives guild create/join events, so getGuilds() is populated and GuildJoinEvent
+    // fires without any extra intent. Slash-command interactions are delivered regardless of
+    // intents.
     JDA jda =
         JDABuilder.createLight(properties.token())
             .addEventListeners(router, registrar)
-            .setActivity(net.dv8tion.jda.api.entities.Activity.playing("/ping"))
+            .setActivity(Activity.playing("/ping"))
             .build();
     jda.awaitReady();
     return jda;

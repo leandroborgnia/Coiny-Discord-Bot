@@ -45,8 +45,8 @@ on lives in Setup + Foundational; each story phase is an independently testable 
 - [X] T003 [P] Configure the Spotless Maven plugin (google-java-format) in `pom.xml` so
   `./mvnw spotless:check` runs in `verify`
 - [X] T004 [P] Create `.gitignore` (ignore `target/`, `.env`, IDE files) and `.env.example`
-  documenting `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`,
-  `SPRING_PROFILES_ACTIVE` per `contracts/configuration.md`
+  documenting `DISCORD_TOKEN`, `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `SPRING_PROFILES_ACTIVE`
+  per `contracts/configuration.md`
 - [X] T005 [P] Create the Spring Boot entry point `src/main/java/bot/CoinyBotApplication.java`
   (`@SpringBootApplication`, base package `bot`)
 
@@ -79,8 +79,11 @@ gateway, command routing, and the test harness.
   that dispatches each `SlashCommandInteractionEvent` to the matching `SlashCommandHandler` bean
   (depends on T011)
 - [X] T013 Create `src/main/java/bot/infrastructure/discord/SlashCommandRegistrar.java` that, on
-  `ReadyEvent`, upserts all `SlashCommandHandler` beans' command data to the guild
-  `DISCORD_GUILD_ID` (idempotent upsert) (depends on T011)
+  `ReadyEvent`, upserts all `SlashCommandHandler` beans' command data to **every** guild the bot is
+  in (`jda.getGuilds()`), and on `GuildJoinEvent` registers to a newly-joined guild (idempotent
+  upsert; JDA receives guild/join events by default, no extra intent needed). No single configured
+  guild id — the bot is multi-server and each interaction is handled in its originating server
+  (depends on T011)
 - [X] T014 [P] Create `src/test/java/bot/support/AbstractPostgresIntegrationTest.java`: a
   Testcontainers `postgres:17` base wiring Spring's DataSource (e.g. `@DynamicPropertySource`) so
   integration tests run against a real throwaway Postgres on the host

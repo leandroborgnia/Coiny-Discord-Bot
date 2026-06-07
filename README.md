@@ -12,14 +12,14 @@ project rules in [`.specify/memory/constitution.md`](.specify/memory/constitutio
 
 - **Docker Desktop running** (for the dev Postgres and for Testcontainers)
 - **JDK 21** (the `./mvnw` wrapper manages Maven itself)
-- A Discord application + bot token, and a test server (guild) id
+- A Discord application + bot token, and a test server you've invited the bot to
 
 ## Local setup (clean checkout → running bot)
 
 ```powershell
 # 1. Configure secrets (never committed)
 Copy-Item .env.example .env
-#    Edit .env: DISCORD_TOKEN, DISCORD_GUILD_ID, DB_PASSWORD (DB_URL/DB_USERNAME already default to local)
+#    Edit .env: DISCORD_TOKEN, DB_PASSWORD (DB_URL/DB_USERNAME already default to local)
 
 # 2. Start the local data store (Postgres 17 in Docker)
 docker compose up -d
@@ -28,9 +28,10 @@ docker compose up -d
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-The bot connects to Postgres, applies the Flyway migration, comes **online** in your test server, and
-registers `/ping`. In the server, run `/ping` → it replies with a success message confirming the
-data store is reachable.
+The bot connects to Postgres, applies the Flyway migration, comes **online**, and registers `/ping`
+to every server it is in (and to any server it later joins). In the server, run `/ping` → it replies
+with a success message confirming the data store is reachable. The reply always lands in the same
+server and channel the command came from.
 
 Stop the database with `docker compose down`; wipe its volume with `docker compose down -v`.
 

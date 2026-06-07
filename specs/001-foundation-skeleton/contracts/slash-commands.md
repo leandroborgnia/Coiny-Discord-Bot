@@ -11,7 +11,7 @@ are routed by `InteractionRouter`; commands are upserted by `SlashCommandRegistr
 | Name | `ping` |
 | Description | `Liveness check — confirms the bot is online and its data store is reachable.` |
 | Options | none |
-| Scope | Guild command, registered against `DISCORD_GUILD_ID` (instant availability) |
+| Scope | Guild command, registered to **every server the bot is in** (instant availability) |
 | Permissions | Usable by any member who can use slash commands in the server |
 
 ### Behavioral contract
@@ -27,6 +27,9 @@ are routed by `InteractionRouter`; commands are upserted by `SlashCommandRegistr
      `🔴 Pong, but the data store is not reachable right now.`
 4. The reply MUST reflect a real round-trip to the data store; a success message is only sent when
    the underlying probe reports `reachable = true` (spec FR-002, SC-002).
+5. Each interaction is server-scoped: the reply MUST land in the same server (guild) and channel the
+   command was invoked in (JDA's interaction hook does this), and the router MUST log the originating
+   guild and channel. No cross-server state is shared.
 
 ### Acceptance mapping
 
@@ -36,7 +39,12 @@ are routed by `InteractionRouter`; commands are upserted by `SlashCommandRegistr
 ## Registration contract
 
 - On `ReadyEvent`, `SlashCommandRegistrar` collects command data from all `SlashCommandHandler`
-  beans and upserts them to the guild identified by `DISCORD_GUILD_ID`.
-- Re-running registration MUST be idempotent (upsert replaces the command set; no duplicates).
+  beans and upserts them to **every guild the bot is in** (`jda.getGuilds()`).
+- On `GuildJoinEvent`, the same command set is upserted to the newly-joined guild, so servers the
+  bot joins later are covered automatically.
+- JDA receives guild and join events by default, so `getGuilds()` is populated and `GuildJoinEvent`
+  fires without any extra intent. There is no configured single guild id.
+- Re-running registration MUST be idempotent (upsert replaces each guild's command set; no
+  duplicates).
 - Adding a future command means adding a new `SlashCommandHandler` bean — no change to the router or
   registrar wiring.

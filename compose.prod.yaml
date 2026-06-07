@@ -31,7 +31,6 @@ services:
       DB_USERNAME: ${DB_USERNAME:-coiny}
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN}
-      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
 
 volumes:
   coiny-pgdata-prod:

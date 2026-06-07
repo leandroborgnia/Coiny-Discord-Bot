@@ -9,7 +9,7 @@ works the same on other platforms.
 
 - Docker Desktop running (required for the dev Postgres and for Testcontainers).
 - JDK 21 available (the `./mvnw` wrapper manages Maven itself).
-- A Discord application + bot token, and a test server (guild) the bot can join, with its guild id.
+- A Discord application + bot token, and a test server you've invited the bot to.
 
 ## 1. Configure secrets (never committed)
 
@@ -19,7 +19,6 @@ Copy the example env file and fill in real values:
 Copy-Item .env.example .env
 # Edit .env and set:
 #   DISCORD_TOKEN=...           (bot token)
-#   DISCORD_GUILD_ID=...        (test server id)
 #   DB_URL=jdbc:postgresql://localhost:5432/coiny
 #   DB_USERNAME=coiny
 #   DB_PASSWORD=...             (any local dev password)
@@ -43,7 +42,7 @@ Stop with `docker compose down`; wipe the dev volume with `docker compose down -
 ```
 
 **Expected**: startup connects to Postgres, Flyway applies `V1__init_liveness.sql`, the bot logs
-readiness and appears **online** in the test server, and `/ping` is registered to the guild.
+readiness and appears **online**, and `/ping` is registered to every server the bot is in.
 
 > Fail-fast checks: with `DISCORD_TOKEN` or `DB_PASSWORD` unset, or Postgres not running, startup
 > aborts with a clear error and the bot does **not** come online (validates FR-005/FR-007).

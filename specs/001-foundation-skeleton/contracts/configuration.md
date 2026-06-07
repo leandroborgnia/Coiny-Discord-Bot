@@ -8,7 +8,6 @@ committed default; `application.yml` references these via `${...}` placeholders 
 | Variable | Required | Used by | Description |
 |----------|----------|---------|-------------|
 | `DISCORD_TOKEN` | Yes | JDA | Bot authentication token. Never committed. Missing → fail fast. |
-| `DISCORD_GUILD_ID` | Yes (dev/verify) | `SlashCommandRegistrar` | Test guild id for instant guild-command registration. |
 | `DB_URL` | Yes | DataSource | JDBC URL to Postgres 17, e.g. `jdbc:postgresql://localhost:5432/coiny`. |
 | `DB_USERNAME` | Yes | DataSource | Database user. |
 | `DB_PASSWORD` | Yes | DataSource | Database password. Never committed. Missing → fail fast. |

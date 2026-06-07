@@ -16,4 +16,3 @@ spring:
 discord:
   enabled: true
   token: ${DISCORD_TOKEN}
-  guild-id: ${DISCORD_GUILD_ID:}
