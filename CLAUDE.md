@@ -64,6 +64,12 @@
 - Run tests inside a container, or let dev and prod share a Postgres volume
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+Active feature: **001-foundation-skeleton**. For technologies, project structure,
+shell commands, and other important context, read the current plan and its design
+artifacts:
+- Plan: `specs/001-foundation-skeleton/plan.md`
+- Research: `specs/001-foundation-skeleton/research.md`
+- Data model: `specs/001-foundation-skeleton/data-model.md`
+- Contracts: `specs/001-foundation-skeleton/contracts/`
+- Quickstart: `specs/001-foundation-skeleton/quickstart.md`
 <!-- SPECKIT END -->
