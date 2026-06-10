@@ -5,3 +5,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  messages:
+    basename: messages/coin-messages
+    encoding: UTF-8

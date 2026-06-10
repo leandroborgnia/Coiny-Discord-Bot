@@ -12,7 +12,15 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  messages:
+    basename: messages/coin-messages
+    encoding: UTF-8
 
 discord:
   enabled: true
   token: ${DISCORD_TOKEN}
+
+coin:
+  # Single source of truth for the /balance recent-history size (FR-013).
+  history:
+    default-limit: 10
