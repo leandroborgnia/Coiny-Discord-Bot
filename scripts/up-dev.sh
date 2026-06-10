@@ -23,7 +23,11 @@ read -r -p "Reset database? This WIPES the dev volume and its password. (y/N) " 
 case "${reset_ans}" in
   y|Y|yes|YES)
     echo "Wiping the dev database volume..."
-    docker compose -f "$COMPOSE_FILE" down -v
+    # `down -v` only tears down, but compose still parses the file's ${...:?} guards, which demand
+    # values at interpolation time — before the prompts have run (reset is intentionally asked
+    # first). Pass throwaway values for THIS teardown only; the wiped volume's real password is
+    # destroyed anyway and these are never used to authenticate.
+    DB_PASSWORD=reset DISCORD_TOKEN=reset docker compose -f "$COMPOSE_FILE" down -v
     ;;
   *)
     echo "Keeping the existing dev database (enter its current password below)."

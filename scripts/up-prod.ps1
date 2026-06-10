@@ -1,33 +1,23 @@
 # Thin Windows wrapper (003-config-runtime): runs scripts/up-prod.sh INSIDE WSL so every prompt —
 # and every secret — stays in WSL and never crosses the PowerShell boundary as a variable.
-# Prerequisites:
-#   - WSL installed with a bash-capable distro.
-#   - Docker Desktop running with WSL integration enabled.
-#   - up-prod.sh has LF line endings (.gitattributes enforces this).
+# WSL inherits this script's working directory (auto-translated to /mnt/...), so the bash launcher
+# and the compose files resolve normally — no path juggling needed.
+# Prerequisites: WSL + a bash distro, Docker Desktop with WSL integration. up-prod.sh must use LF
+# line endings (.gitattributes enforces this). Docker readiness is checked by up-prod.sh itself.
 $ErrorActionPreference = 'Stop'
 
-# --- preflight: WSL present ---
 if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
   Write-Error "WSL not found. Install WSL + a bash distro and enable Docker Desktop WSL integration."
   exit 1
 }
 
-# Resolve repo root (parent of scripts/) and translate to a WSL path.
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot  = Split-Path -Parent $scriptDir
-$wslRepo   = (& wsl.exe wslpath -a "$repoRoot")
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($wslRepo)) {
-  Write-Error "Could not translate '$repoRoot' to a WSL path. Is WSL working?"
-  exit 1
+# Start from the repo root (parent of scripts/) so WSL begins there and ./scripts/up-prod.sh resolves.
+$repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+Push-Location $repoRoot
+try {
+  wsl.exe bash ./scripts/up-prod.sh
+  $code = $LASTEXITCODE
+} finally {
+  Pop-Location
 }
-
-# --- preflight: Docker reachable from inside WSL ---
-& wsl.exe docker info *> $null
-if ($LASTEXITCODE -ne 0) {
-  Write-Error "Docker daemon not reachable from WSL. Start Docker Desktop and enable WSL integration."
-  exit 1
-}
-
-# --- run the bash launcher inside WSL (prompts happen there) ---
-& wsl.exe bash -lc "cd '$wslRepo' && ./scripts/up-prod.sh"
-exit $LASTEXITCODE
+exit $code
