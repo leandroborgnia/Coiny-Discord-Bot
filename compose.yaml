@@ -1,23 +1,46 @@
-# Dev: Postgres 17 only. The application runs on the host for fast iteration
-# (./mvnw spring-boot:run -Dspring-boot.run.profiles=dev). Dev uses its OWN volume and port and
-# never shares data with the prod compose (compose.prod.yaml).
+# Dev stack: app + Postgres 17, BOTH in Docker, built from the single multi-stage Dockerfile.
+# Run it via `scripts/up-dev.sh` (or `scripts/up-dev.ps1` on Windows), which prompts for the
+# secrets and brings the stack up together — the app is NOT run on the host via Maven (Maven is
+# for the build and the test suite only). Dev uses its OWN port and volume and never shares data
+# with the prod compose (compose.prod.yaml).
+#
+# Single source of truth: each non-secret connection value (DB name, username) is declared here and
+# injected into BOTH containers; application.yml only references them via ${...} and keeps no copy,
+# so Docker and Spring cannot drift. Secrets (DB_PASSWORD, DISCORD_TOKEN) have NO default — they are
+# supplied as environment by the launch script.
 services:
   postgres:
     image: postgres:17
     container_name: coiny-postgres-dev
     environment:
-      POSTGRES_DB: coiny
-      POSTGRES_USER: coiny
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in your .env}
+      POSTGRES_DB: ${DB_NAME:-coiny}
+      POSTGRES_USER: ${DB_USERNAME:-coiny}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD (run scripts/up-dev.sh)}
     ports:
       - "5432:5432"
     volumes:
       - coiny-pgdata-dev:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U coiny -d coiny"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-coiny} -d ${DB_NAME:-coiny}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  app:
+    build: .
+    image: coiny-bot
+    container_name: coiny-bot-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      # Host is the compose service name `postgres` on the INTERNAL port 5432 (never localhost,
+      # never the published host port). DB name is single-sourced with the postgres service above.
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-coiny}
+      DB_USERNAME: ${DB_USERNAME:-coiny}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD (run scripts/up-dev.sh)}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN (run scripts/up-dev.sh)}
 
 volumes:
   coiny-pgdata-dev:

@@ -1,23 +1,26 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.1.1
-Bump rationale: PATCH — concision / editorial pass. Removed duplicated restatements and trimmed
-                rationales; no principle, rule, or normative meaning changed.
+Version change: 1.1.1 → 1.1.2
+Bump rationale: PATCH — config-format refinement. Principle VII's configuration mandate is
+                restated in terms of `application.yml` (plus `application-{profile}.yml`) rather
+                than `application.properties`. This reverts only the file FORMAT; every other rule
+                (no dotenv, no Spring-side `.env`, Docker-injected env-var secrets, single source
+                of truth, profile-driven dev/prod differences) is unchanged. No principle or
+                section added, removed, or redefined.
 
 Editorial notes:
-  - The app-run rule (Docker Compose, not host Maven) is now stated once authoritatively in
-    "Containerization & Environment Topology" and only cross-referenced from Principle VI.
-  - The Development Workflow code-review bullet no longer re-enumerates each principle (that
-    list duplicated Principles I-VII); it now references the Core Principles as a whole.
-  - Principle III no longer repeats the Postgres-reliance allowance already granted by I.
+  - The repository's Spring configuration is already authored in YAML (`application.yml`,
+    `application-dev.yml`, test `application.yml`); this amendment aligns the written mandate with
+    that existing, retained format instead of mandating a switch to `.properties`.
 
 Added sections: none. Removed sections: none.
 
 Templates / artifacts reviewed:
   ✅ .specify/templates/{plan,spec,tasks}-template.md — generic Constitution Check gate; no edit.
-  ⚠ CLAUDE.md (Build/Test/Run) + src/main/resources/application.yml — still pre-amendment;
-      reconciled by the active configuration & runtime feature (specify → plan → implement).
+  ✅ src/main/resources/application.yml — format now matches the mandate (retained, not removed).
+  ⚠ CLAUDE.md (Build/Test/Run) — app-run topology still pre-amendment; reconciled by the active
+      configuration & runtime feature (specify → plan → implement).
 
 Follow-up TODOs: none. RATIFICATION_DATE remains 2026-06-06.
 -->
@@ -92,15 +95,15 @@ behavior; running on the host avoids Docker-in-Docker and isolates the test data
 ### VII. Immutable Migrations, Configuration & Secret Hygiene
 
 Schema is owned by Flyway; an applied migration is NEVER edited, renumbered, or deleted — changes
-ship as a new `V<n+1>`. Spring configuration lives in `application.properties` (plus
-`application-{profile}.properties`); a dotenv library and Spring-side `.env` loading are FORBIDDEN
+ship as a new `V<n+1>`. Spring configuration lives in `application.yml` (plus
+`application-{profile}.yml`); a dotenv library and Spring-side `.env` loading are FORBIDDEN
 (Docker Compose's native variable substitution is permitted). Secrets (Discord token, database
 passwords, any credential) MUST be `${...}` placeholders supplied as environment variables —
 injected by Docker Compose and prompted by the launch scripts each run — and MUST NEVER be
 committed, baked into an image layer, or cached to an on-disk file.
 
 **Rationale**: Editing an applied migration corrupts checksum history; a committed or file-cached
-secret is leaked permanently. One `application.properties` surface with env-injected,
+secret is leaked permanently. One `application.yml` surface with env-injected,
 never-persisted secrets stays reviewable while keeping no credential at rest.
 
 ## Containerization & Environment Topology
@@ -144,4 +147,4 @@ clarifications and non-semantic refinements.
 again after Phase 1. Pull requests touching the ledger, cooldown engine, migrations, Docker
 topology, or secret handling MUST receive principle-by-principle sign-off.
 
-**Version**: 1.1.1 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-10
+**Version**: 1.1.2 | **Ratified**: 2026-06-06 | **Last Amended**: 2026-06-10

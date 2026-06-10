@@ -5,12 +5,14 @@
 - Postgres 17 runs in Docker for BOTH dev and prod (no native Postgres install).
   Dev and prod use the SAME image but SEPARATE compose configs, ports, and volumes —
   their data is never shared.
-- Local dev database:
-  - Start: `docker compose up -d`
-  - Stop: `docker compose down`
-  - Reset data (wipe volume): `docker compose down -v`
-- The DB password and Discord token come from env vars (`DB_PASSWORD`, `DISCORD_TOKEN`);
-  never hardcode them or write them into committed properties files.
+- Run the app (dev): `scripts/up-dev.sh` (Linux/macOS) or `scripts/up-dev.ps1` (Windows/WSL).
+  It prompts for the secrets and brings the app **and** Postgres up together. It first asks
+  whether to reset the dev database — answer "yes" to wipe the volume and recover from a forgotten
+  local password (`down -v` is reached through this prompt, not run by hand).
+- Run the app (prod): `scripts/up-prod.sh` / `scripts/up-prod.ps1` (no reset/wipe option).
+- The DB password and Discord token come from env vars (`DB_PASSWORD`, `DISCORD_TOKEN`) injected by
+  Docker Compose; the launch scripts prompt for them each run. Never hardcode a secret, write it
+  into a committed config file, or reintroduce a `.env`/dotenv mechanism.
 
 ## Docker strategy (read before adding any Dockerfile or compose service)
 - ONE multi-stage Dockerfile at repo root: build stage runs Maven to produce the jar,
@@ -24,12 +26,13 @@
 ## Build / Test / Run
 - Build the jar (no tests): `./mvnw -q -DskipTests package`
 - Build the app image: `docker build -t coiny-bot .`
-- Run all tests (unit + integration): `./mvnw -q verify`
+- Run all tests (unit + integration): `./mvnw -q verify` (needs Docker running; no secrets required)
   - Testcontainers starts its OWN throwaway Postgres for integration tests; it does NOT
     use the docker compose dev database. Docker just needs to be running on the host.
-- Fast dev run (recommended inner loop — needs `docker compose up -d` first):
-  `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`
-- Containerized run (app + Postgres both in Docker, parity check): `docker compose up --build`
+- Run the app (dev): `scripts/up-dev.sh` / `scripts/up-dev.ps1` — the intended dev run path
+  (app + Postgres in Docker, secrets prompted). Running the app on the host via the Spring Boot
+  Maven plugin is **not** the supported path; Maven is for the build and the test suite only.
+- Run the app (prod): `scripts/up-prod.sh` / `scripts/up-prod.ps1`.
 - Format: `./mvnw spotless:apply`
 
 ## Source Layout
@@ -64,12 +67,12 @@
 - Run tests inside a container, or let dev and prod share a Postgres volume
 
 <!-- SPECKIT START -->
-Active feature: **002-coin-ledger**. For technologies, project structure,
+Active feature: **003-config-runtime**. For technologies, project structure,
 shell commands, and other important context, read the current plan and its design
 artifacts:
-- Plan: `specs/002-coin-ledger/plan.md`
-- Research: `specs/002-coin-ledger/research.md`
-- Data model: `specs/002-coin-ledger/data-model.md`
-- Contracts: `specs/002-coin-ledger/contracts/`
-- Quickstart: `specs/002-coin-ledger/quickstart.md`
+- Plan: `specs/003-config-runtime/plan.md`
+- Research: `specs/003-config-runtime/research.md`
+- Data model: `specs/003-config-runtime/data-model.md`
+- Contracts: `specs/003-config-runtime/contracts/`
+- Quickstart: `specs/003-config-runtime/quickstart.md`
 <!-- SPECKIT END -->

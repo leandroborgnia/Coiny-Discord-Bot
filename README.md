@@ -16,27 +16,32 @@ project rules in [`.specify/memory/constitution.md`](.specify/memory/constitutio
 
 ## Local setup (clean checkout → running bot)
 
+The app and Postgres run together in Docker; a launch script prompts for the secrets each run.
+There is **no** `.env` file and no dotenv mechanism — secrets are supplied as environment variables
+injected by Docker Compose.
+
 ```powershell
-# 1. Configure secrets (never committed)
-Copy-Item .env.example .env
-#    Edit .env: DISCORD_TOKEN, DB_PASSWORD (DB_URL/DB_USERNAME already default to local)
-
-# 2. Start the local data store (Postgres 17 in Docker)
-docker compose up -d
-
-# 3. Run the bot on the host (fast inner loop)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+# Windows (PowerShell + WSL): brings up app + Postgres together
+.\scripts\up-dev.ps1
 ```
+
+```bash
+# Linux/macOS: same flow
+./scripts/up-dev.sh
+```
+
+The script first asks **whether to reset the database** (answer "yes" to wipe the dev volume and
+recover from a forgotten local password), then prompts for the **database password** and the
+**Discord token** (token entered hidden). It then builds and starts the stack.
 
 The bot connects to Postgres, applies the Flyway migration, comes **online**, and registers `/ping`
 to every server it is in (and to any server it later joins). In the server, run `/ping` → it replies
 with a success message confirming the data store is reachable. The reply always lands in the same
 server and channel the command came from.
 
-Stop the database with `docker compose down`; wipe its volume with `docker compose down -v`.
-
-> Fail-fast: if `DISCORD_TOKEN` or `DB_PASSWORD` is missing, or Postgres is not running, startup
-> aborts with a clear error and the bot does not come online.
+> Fail-fast: if a secret is blank the script re-prompts; if the entered password does not match an
+> existing (non-reset) database, startup fails with a clear DB authentication error and the bot does
+> not come online.
 
 ## Tests
 
@@ -53,10 +58,13 @@ and tests are never run inside a container.
 ```powershell
 ./mvnw -q -DskipTests package          # executable Spring Boot jar in target/
 docker build -t coiny-bot .            # single multi-stage image
-docker compose -f compose.prod.yaml up --build   # app + Postgres parity (separate volume/port)
+.\scripts\up-prod.ps1                  # app + Postgres (prod port/volume); prompts for secrets
+#   Linux/macOS: ./scripts/up-prod.sh
 ```
 
-Launching from the jar or image yields the same online bot answering `/ping`.
+Launching from the jar or image yields the same online bot answering `/ping`. The prod launch
+script prompts for the secrets and brings the app + Postgres up together (separate volume/port from
+dev); it never offers a reset/wipe.
 
 ## Continuous integration
 
