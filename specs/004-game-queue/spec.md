@@ -363,7 +363,9 @@ button in a second copy of the same queue message does not double-count.
   week's designated game does not change and no additional game is consumed.
 - **FR-017**: The propose cost and the bump cost MUST be configurable per server; a change applies to
   subsequent actions only.
-- **FR-018**: Only an authorized server role MAY change the propose or bump cost.
+- **FR-018**: Only a member with the **Manage Server** permission MAY change the propose or bump
+  cost. (This is the single authorization bar for queue configuration — no separate role need be
+  configured, and it is lighter than the Administrator bar that governs the coin economy.)
 - **FR-019**: Spending coins MUST deduct from the member's per-server balance, using the cost
   configured at the time the action is performed.
 - **FR-023**: Every coin amount spent on a propose or bump MUST be credited to the server's **pot**
@@ -439,8 +441,8 @@ button in a second copy of the same queue message does not double-count.
   to date per FR-038. If no announcement channel is configured, no announcement is posted (the rotation
   is silent). On downtime catch-up, only the final current game MUST be announced, exactly once — not
   one message per missed week.
-- **FR-037**: An authorized server role MAY set or clear the per-server announcement channel. Until one
-  is set, no rotation announcements are posted.
+- **FR-037**: A member with the **Manage Server** permission MAY set or clear the per-server
+  announcement channel (same bar as FR-018). Until one is set, no rotation announcements are posted.
 - **FR-038**: The **single most-recent announcement message per server is the live upvote-count
   surface**: whenever an upvote is added or removed, the system MUST update that latest announcement
   message to show the current per-slot counts for its "up next" entries. Older announcement messages,
@@ -534,7 +536,7 @@ button in a second copy of the same queue message does not double-count.
   lasts exactly 7 days: the next advance is 7 days after the last designation (pop), measured per
   server, with the bootstrap instant-pop starting the clock. No calendar/timezone alignment is required.
 - Propose and bump costs are whole, positive numbers; the defaults are **1 coin to propose** and
-  **1 coin per bump**, changed by the same authorized server role that manages other coin settings.
+  **1 coin per bump**, changed by any member with the **Manage Server** permission (FR-018).
 - A game's identity comes from the proposing member's live Discord Rich Presence at propose time (they
   must be playing the game). The system stores the captured ID-or-name plus as much Rich Presence
   detail/art as available. Rich-presence names can vary by launcher (Steam/Epic/PlayStation/etc.), so
@@ -558,7 +560,8 @@ button in a second copy of the same queue message does not double-count.
 
 - The existing per-server coin economy and balance (members earn and hold coins elsewhere; this
   feature only spends them).
-- The existing per-server configuration mechanism and authorized moderator role used to set costs.
+- The existing per-server configuration mechanism; queue costs and the announcement channel are set
+  by members holding the **Manage Server** permission (no separate moderator role required).
 - The platform's rich-presence / activity data for members (requires the presence gateway intent and
   the member sharing game activity). Proposing reads the member's current activity; an optional
   external art source may enrich cover art by captured name/ID.
