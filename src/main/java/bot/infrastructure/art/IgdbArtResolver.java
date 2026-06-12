@@ -65,7 +65,9 @@ public class IgdbArtResolver implements ArtResolverPort {
     }
     try {
       String bearer = ensureToken();
-      String body = "search \"" + name.replace("\"", "") + "\"; fields cover.image_id; limit 1;";
+      // Fetch several candidates with their category so we can prefer the main game over DLC.
+      String body =
+          "search \"" + name.replace("\"", "") + "\"; fields cover.image_id, category; limit 10;";
       HttpRequest request =
           HttpRequest.newBuilder(URI.create(baseUrl + "/games"))
               .header("Client-ID", clientId)
@@ -81,11 +83,33 @@ public class IgdbArtResolver implements ArtResolverPort {
       if (!games.isArray() || games.isEmpty()) {
         return Optional.empty();
       }
-      String imageId = games.get(0).path("cover").path("image_id").asText("");
-      return imageId.isBlank() ? Optional.empty() : Optional.of(COVER_CDN + imageId + ".jpg");
+      String imageId = pickMainGameCover(games);
+      return imageId == null ? Optional.empty() : Optional.of(COVER_CDN + imageId + ".jpg");
     } catch (Exception e) {
       return Optional.empty();
     }
+  }
+
+  /**
+   * Prefer the cover of the main game (IGDB {@code category == 0}) over DLC/expansions/bundles;
+   * fall back to the first search result that has a cover when no main-game entry does. Search
+   * relevance order is preserved within each tier.
+   */
+  private static String pickMainGameCover(JsonNode games) {
+    String fallback = null;
+    for (JsonNode game : games) {
+      String imageId = game.path("cover").path("image_id").asText("");
+      if (imageId.isBlank()) {
+        continue;
+      }
+      if (game.path("category").asInt(-1) == 0) {
+        return imageId; // main_game
+      }
+      if (fallback == null) {
+        fallback = imageId;
+      }
+    }
+    return fallback;
   }
 
   private synchronized String ensureToken() throws Exception {

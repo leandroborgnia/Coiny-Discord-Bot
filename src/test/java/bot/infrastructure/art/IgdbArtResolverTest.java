@@ -46,6 +46,22 @@ class IgdbArtResolverTest {
   }
 
   @Test
+  void prefersTheMainGameCoverOverDlc() throws Exception {
+    HttpClient http = mock(HttpClient.class);
+    HttpResponse<String> tokenResponse = response("{\"access_token\":\"tok\",\"expires_in\":3600}");
+    // A DLC (category 1) ranks first; the main game (category 0) is second — pick the main game.
+    HttpResponse<String> gamesResponse =
+        response(
+            "[{\"category\":1,\"cover\":{\"image_id\":\"dlc1\"}},"
+                + "{\"category\":0,\"cover\":{\"image_id\":\"main1\"}}]");
+    when(http.<String>send(any(), any())).thenReturn(tokenResponse).thenReturn(gamesResponse);
+    IgdbArtResolver resolver = new IgdbArtResolver(true, BASE, "id", "secret", http);
+
+    assertThat(resolver.resolveCover(ID, "War Thunder"))
+        .contains("https://images.igdb.com/igdb/image/upload/t_cover_big/main1.jpg");
+  }
+
+  @Test
   void cachesTheBearerTokenAcrossCalls() throws Exception {
     AtomicInteger tokenCalls = new AtomicInteger();
     HttpClient http = mock(HttpClient.class);
