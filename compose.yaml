@@ -41,6 +41,10 @@ services:
       DB_USERNAME: ${DB_USERNAME:-coiny}
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD (run scripts/up-dev.sh)}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN (run scripts/up-dev.sh)}
+      # Optional IGDB cover-art credentials (Twitch OAuth). Blank/unset => the art resolver is a
+      # disabled no-op and the queue view/announcement render name-only. Never committed.
+      IGDB_CLIENT_ID: ${IGDB_CLIENT_ID:-}
+      IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET:-}
 
 volumes:
   coiny-pgdata-dev:

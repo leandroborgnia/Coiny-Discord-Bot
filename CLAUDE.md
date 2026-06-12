@@ -10,6 +10,12 @@
   whether to reset the dev database — answer "yes" to wipe the volume and recover from a forgotten
   local password (`down -v` is reached through this prompt, not run by hand).
 - Run the app (prod): `scripts/up-prod.sh` / `scripts/up-prod.ps1` (no reset/wipe option).
+- **Feature 004 (game queue) prerequisites**: the bot uses the **privileged** `GUILD_PRESENCES` and
+  `GUILD_MEMBERS` gateway intents (to capture a proposer's Rich Presence). Both MUST be enabled for
+  the bot in the Discord Developer Portal (Bot → Privileged Gateway Intents), or it won't start.
+  Cover art is optional: set `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET` (Twitch OAuth) to enable IGDB
+  lookups — blank/unset means the art resolver is a disabled no-op and the queue renders name-only.
+  These two are optional env vars passed through `compose.yaml` / `compose.prod.yaml`; never commit them.
 - The DB password and Discord token come from env vars (`DB_PASSWORD`, `DISCORD_TOKEN`) injected by
   Docker Compose; the launch scripts prompt for them each run. Never hardcode a secret, write it
   into a committed config file, or reintroduce a `.env`/dotenv mechanism.
@@ -40,6 +46,8 @@
 - `bot.application` — @Transactional services, the only place that talks to repositories
 - `bot.domain` — pure Java; entities, value objects, domain services
 - `bot.infrastructure` — Spring Data repositories, Flyway, external clients
+  (e.g. `bot.infrastructure.art` — IGDB cover-art HTTP client; `bot.infrastructure.schedule` —
+  the weekly-rotation scheduler; `bot.infrastructure.discord` — JDA config + presence/button routers)
 
 ## Conventions
 - Java 21, records for DTOs/value objects, no Lombok on domain entities

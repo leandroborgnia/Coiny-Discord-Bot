@@ -345,24 +345,24 @@ with a channel configured, only the latest announcement's counts update.
 
 **Purpose**: Admin config surface, docs, and full validation.
 
-- [ ] T057 [P] Implement `ConfigureQueueService` (authorize on the **Manage Server** permission:
+- [X] T057 [P] Implement `ConfigureQueueService` (authorize on the **Manage Server** permission:
   `ConfigureQueueRequest.actorHasManageServer`, else throw `NotAuthorizedException` — no coin-moderator
   role coupling, no Administrator/owner requirement, no role-not-configured path; set costs /
   announcement channel) + `ConfigureQueueRequest`/`QueueConfigResult` in
   `src/main/java/bot/application/queue/ConfigureQueueService.java`, with a service test (authorized
   vs unauthorized) in `src/test/java/bot/application/queue/ConfigureQueueServiceTest.java`.
-- [ ] T058 [P] Implement the thin `QueueConfigCommand` (`/queue-config` subcommands `costs` /
+- [X] T058 [P] Implement the thin `QueueConfigCommand` (`/queue-config` subcommands `costs` /
   `announce` / `announce-clear`, `DefaultMemberPermissions.enabledFor(MANAGE_SERVER)`; pass
   `actorHasManageServer = member.hasPermission(Permission.MANAGE_SERVER)` into the request so the
   Discord-layer filter and the service check agree) in
   `src/main/java/bot/discord/command/QueueConfigCommand.java`.
-- [ ] T059 [P] Update `src/test/java/bot/discord/command/CommandSurfaceTest.java` to assert the new
+- [X] T059 [P] Update `src/test/java/bot/discord/command/CommandSurfaceTest.java` to assert the new
   `/queue-*` commands (and the button router) register without collision.
-- [ ] T060 [P] Update `CLAUDE.md` Build/Test/Run + Source-Layout notes for the queue feature (privileged
+- [X] T060 [P] Update `CLAUDE.md` Build/Test/Run + Source-Layout notes for the queue feature (privileged
   intents prerequisite, IGDB env vars) and add the two IGDB env passthroughs (`IGDB_CLIENT_ID`,
   `IGDB_CLIENT_SECRET`) to `compose.yaml` and `compose.prod.yaml`.
-- [ ] T061 Run the `quickstart.md` validation scenarios (US1–US5 + cooldown + art) and fix any gaps.
-- [ ] T062 Run `./mvnw spotless:apply` then `./mvnw -q verify`; surface any failure verbatim.
+- [X] T061 Run the `quickstart.md` validation scenarios (US1–US5 + cooldown + art) and fix any gaps.
+- [X] T062 Run `./mvnw spotless:apply` then `./mvnw -q verify`; surface any failure verbatim.
 
 ---
 
