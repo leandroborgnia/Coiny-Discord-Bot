@@ -307,31 +307,31 @@ with a channel configured, only the latest announcement's counts update.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T050 [P] [US5] Testcontainers test `JpaUpvoteAdapter` toggle/count with
+- [X] T050 [P] [US5] Testcontainers test `JpaUpvoteAdapter` toggle/count with
   PK(slot, member, game_instance_id) idempotency (duplicate press = no-op), count scoped to the
   current instance, and **replace-invalidates-upvotes (U3)** — after `replaceGame` mints a new instance,
   the count is 0 and a stray old-instance row is never counted yet the member can re-vote on the new
   instance — in `src/test/java/bot/infrastructure/persistence/queue/JpaUpvoteAdapterTest.java`.
-- [ ] T051 [P] [US5] Service test `UpvoteServiceTest` (changed flag, new count, live-surface ref only
+- [X] T051 [P] [US5] Service test `UpvoteServiceTest` (changed flag, new count, live-surface ref only
   when a channel is configured; no-op when unchanged; **`STALE` outcome (U3)** when the press's
   `gameInstanceId` ≠ the slot's current instance — no write, no announcement edit) in
   `src/test/java/bot/application/queue/UpvoteServiceTest.java`.
 
 ### Implementation for User Story 5
 
-- [ ] T052 [US5] Add the `ButtonHandler` interface and `ButtonInteractionRouter extends ListenerAdapter`
+- [X] T052 [US5] Add the `ButtonHandler` interface and `ButtonInteractionRouter extends ListenerAdapter`
   (dispatch `onButtonInteraction` by `componentId` prefix; gated by `discord.enabled`; registered as a
   JDA listener alongside `InteractionRouter`) in `src/main/java/bot/infrastructure/discord/`.
-- [ ] T053 [US5] Implement `JpaUpvoteAdapter.toggle(slotId, memberId, gameInstanceId)` /
+- [X] T053 [US5] Implement `JpaUpvoteAdapter.toggle(slotId, memberId, gameInstanceId)` /
   `count(slotId, gameInstanceId)` (insert `ON CONFLICT DO NOTHING` / delete; count filtered to the
   given instance) in `src/main/java/bot/infrastructure/persistence/queue/JpaUpvoteAdapter.java`.
-- [ ] T054 [US5] Implement `UpvoteService` (`@Transactional`; `currentInstance` stale-button guard →
+- [X] T054 [US5] Implement `UpvoteService` (`@Transactional`; `currentInstance` stale-button guard →
   `STALE`; toggle + count by instance; return `AnnouncementRef` when a live surface exists and the vote
   changed) + `ToggleUpvoteRequest`(incl. `UUID gameInstanceId`)/`Result` in
   `src/main/java/bot/application/queue/UpvoteService.java`.
-- [ ] T055 [US5] Implement `JdaAnnouncementAdapter.edit` (update only the latest announcement message's
+- [X] T055 [US5] Implement `JdaAnnouncementAdapter.edit` (update only the latest announcement message's
   counts — FR-038) in `src/main/java/bot/infrastructure/discord/JdaAnnouncementAdapter.java`.
-- [ ] T056 [US5] Implement the thin `UpvoteButtonHandler` (`ButtonHandler` prefix `upvote:`; parse
+- [X] T056 [US5] Implement the thin `UpvoteButtonHandler` (`ButtonHandler` prefix `upvote:`; parse
   `slotId` and `gameInstanceId` from the `upvote:{slotId}:{gameInstanceId}` component id; `deferEdit()`
   ack without re-rendering the ephemeral; delegate; trigger the announcement edit only when the vote
   changed) in `src/main/java/bot/discord/command/UpvoteButtonHandler.java`. Ensure `QueueViewCommand`

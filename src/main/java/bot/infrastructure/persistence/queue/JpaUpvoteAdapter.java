@@ -29,17 +29,18 @@ public class JpaUpvoteAdapter implements UpvotePort {
             .setParameter(3, gameInstanceId.toString())
             .executeUpdate();
     if (inserted == 1) {
-      return true; // upvote added
+      return true; // upvote added (a real transition)
     }
-    entityManager
-        .createNativeQuery(
-            "DELETE FROM queue_upvote"
-                + " WHERE slot_id = ? AND member_id = ? AND game_instance_id = CAST(? AS uuid)")
-        .setParameter(1, slotId)
-        .setParameter(2, memberId)
-        .setParameter(3, gameInstanceId.toString())
-        .executeUpdate();
-    return true; // upvote removed (toggle off)
+    int removed =
+        entityManager
+            .createNativeQuery(
+                "DELETE FROM queue_upvote"
+                    + " WHERE slot_id = ? AND member_id = ? AND game_instance_id = CAST(? AS uuid)")
+            .setParameter(1, slotId)
+            .setParameter(2, memberId)
+            .setParameter(3, gameInstanceId.toString())
+            .executeUpdate();
+    return removed == 1; // removed => transition; already gone (a lost race) => no-op
   }
 
   @Override

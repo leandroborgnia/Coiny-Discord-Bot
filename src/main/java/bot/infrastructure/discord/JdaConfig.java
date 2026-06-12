@@ -26,7 +26,10 @@ public class JdaConfig {
 
   @Bean(destroyMethod = "shutdown")
   public JDA jda(
-      DiscordProperties properties, InteractionRouter router, SlashCommandRegistrar registrar)
+      DiscordProperties properties,
+      InteractionRouter router,
+      SlashCommandRegistrar registrar,
+      ButtonInteractionRouter buttonRouter)
       throws InterruptedException {
     if (properties.token() == null || properties.token().isBlank()) {
       throw new IllegalStateException(
@@ -45,7 +48,7 @@ public class JdaConfig {
             .enableCache(CacheFlag.ACTIVITY)
             .setMemberCachePolicy(MemberCachePolicy.NONE)
             .setChunkingFilter(ChunkingFilter.NONE)
-            .addEventListeners(router, registrar)
+            .addEventListeners(router, registrar, buttonRouter)
             .setActivity(Activity.playing("/ping"))
             .build();
     jda.awaitReady();

@@ -1,6 +1,5 @@
 package bot.application.queue;
 
-import bot.domain.queue.AnnouncementView;
 import bot.domain.queue.CooldownPort;
 import bot.domain.queue.QueueConfigPort;
 import bot.domain.queue.QueuePort;
@@ -8,9 +7,7 @@ import bot.domain.queue.QueueSlot;
 import bot.domain.queue.RotationPolicy;
 import bot.domain.queue.RotationState;
 import bot.domain.queue.RotationStatePort;
-import bot.domain.queue.UpvotePort;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,19 +32,19 @@ public class AdvanceRotationService {
   private final RotationStatePort rotationPort;
   private final CooldownPort cooldownPort;
   private final QueueConfigPort configPort;
-  private final UpvotePort upvotePort;
+  private final AnnouncementAssembler announcementAssembler;
 
   public AdvanceRotationService(
       QueuePort queuePort,
       RotationStatePort rotationPort,
       CooldownPort cooldownPort,
       QueueConfigPort configPort,
-      UpvotePort upvotePort) {
+      AnnouncementAssembler announcementAssembler) {
     this.queuePort = queuePort;
     this.rotationPort = rotationPort;
     this.cooldownPort = cooldownPort;
     this.configPort = configPort;
-    this.upvotePort = upvotePort;
+    this.announcementAssembler = announcementAssembler;
   }
 
   @Transactional
@@ -88,27 +85,8 @@ public class AdvanceRotationService {
     }
 
     if (lastDesignated != null && configPort.get(guildId).hasAnnouncementChannel()) {
-      return new AdvanceResult(periods, Optional.of(buildAnnouncement(guildId, lastDesignated)));
+      return new AdvanceResult(periods, announcementAssembler.assemble(guildId));
     }
     return new AdvanceResult(periods, Optional.empty());
-  }
-
-  private AnnouncementView buildAnnouncement(long guildId, QueueSlot current) {
-    List<AnnouncementView.UpNext> upNext =
-        queuePort.queued(guildId).stream()
-            .limit(5)
-            .map(
-                slot ->
-                    new AnnouncementView.UpNext(
-                        slot.game().name(),
-                        upvotePort.count(slot.id(), slot.gameInstanceId()),
-                        slot.game().largeImageUrl()))
-            .toList();
-    return new AnnouncementView(
-        guildId,
-        current.game().name(),
-        current.proposerMemberId(),
-        current.game().largeImageUrl(),
-        upNext);
   }
 }
