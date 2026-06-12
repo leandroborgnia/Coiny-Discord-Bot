@@ -206,6 +206,38 @@ public class JpaQueueAdapter implements QueuePort {
   }
 
   @Override
+  public void bumpSwap(long guildId, long slotId, int currentPosition) {
+    // Three steps through a free temp position (0) so the partial unique index on
+    // (guild_id, position) is never violated mid-statement.
+    entityManager
+        .createNativeQuery("UPDATE queue_entry SET position = 0 WHERE id = ? AND status = 'QUEUED'")
+        .setParameter(1, slotId)
+        .executeUpdate();
+    entityManager
+        .createNativeQuery(
+            "UPDATE queue_entry SET position = ?"
+                + " WHERE guild_id = ? AND status = 'QUEUED' AND position = ?")
+        .setParameter(1, currentPosition)
+        .setParameter(2, guildId)
+        .setParameter(3, currentPosition - 1)
+        .executeUpdate();
+    entityManager
+        .createNativeQuery("UPDATE queue_entry SET position = ? WHERE id = ? AND status = 'QUEUED'")
+        .setParameter(1, currentPosition - 1)
+        .setParameter(2, slotId)
+        .executeUpdate();
+  }
+
+  @Override
+  public void addCoinsSpent(long slotId, int amount) {
+    entityManager
+        .createNativeQuery("UPDATE queue_entry SET coins_spent = coins_spent + ? WHERE id = ?")
+        .setParameter(1, amount)
+        .setParameter(2, slotId)
+        .executeUpdate();
+  }
+
+  @Override
   public int otherQueuedCount(long guildId, long excludingSlotId) {
     Object count =
         entityManager

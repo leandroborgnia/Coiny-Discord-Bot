@@ -55,4 +55,14 @@ public interface QueuePort {
 
   /** N for the cooldown: how many other slots remain QUEUED besides the given one. */
   int otherQueuedCount(long guildId, long excludingSlotId);
+
+  /**
+   * Swap the slot (currently at {@code currentPosition}) with the one directly above it — a single
+   * one-position-up move (FR-004). The caller must have verified it is not the top (position &gt;
+   * 1).
+   */
+  void bumpSwap(long guildId, long slotId, int currentPosition);
+
+  /** Add to a slot's running {@code coins_spent} (the refund amount on withdraw — FR-033). */
+  void addCoinsSpent(long slotId, int amount);
 }

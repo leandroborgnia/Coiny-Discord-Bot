@@ -278,18 +278,18 @@ lower; bump at top / unaffordable → no change.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T046 [P] [US4] Service test `BumpGameServiceTest` (swap, at-top, no-queued, insufficient,
+- [X] T046 [P] [US4] Service test `BumpGameServiceTest` (swap, at-top, no-queued, insufficient,
   duplicate) in `src/test/java/bot/application/queue/BumpGameServiceTest.java`.
-- [ ] T047 [P] [US4] Testcontainers test that a bump is a single swap preserving all other positions
+- [X] T047 [P] [US4] Testcontainers test that a bump is a single swap preserving all other positions
   and posts a `QUEUE_BUMP` `MEMBER↔POT` movement, in
   `src/test/java/bot/infrastructure/persistence/queue/BumpSwapIT.java`.
 
 ### Implementation for User Story 4
 
-- [ ] T048 [US4] Implement `BumpGameService` (`@Transactional`; lock queue→account; `bumpSwap` via
+- [X] T048 [US4] Implement `BumpGameService` (`@Transactional`; lock queue→account; `bumpSwap` via
   `QueueOrderingPolicy`; `coins_spent += bumpCost`; `QUEUE_BUMP` spend) + `BumpGameRequest`/`Result` in
   `src/main/java/bot/application/queue/BumpGameService.java`.
-- [ ] T049 [US4] Implement the thin `BumpCommand` (`/queue-bump`) in
+- [X] T049 [US4] Implement the thin `BumpCommand` (`/queue-bump`) in
   `src/main/java/bot/discord/command/BumpCommand.java`, and add bump keys to
   `queue-messages.properties`.
 
