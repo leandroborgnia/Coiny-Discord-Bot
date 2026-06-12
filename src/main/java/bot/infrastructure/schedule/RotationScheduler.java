@@ -2,10 +2,8 @@ package bot.infrastructure.schedule;
 
 import bot.application.queue.AdvanceResult;
 import bot.application.queue.AdvanceRotationService;
-import bot.domain.queue.AnnouncementPort;
-import bot.domain.queue.AnnouncementView;
-import bot.domain.queue.QueueConfigPort;
 import bot.domain.queue.RotationStatePort;
+import bot.infrastructure.discord.AnnouncementPoster;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,18 +32,15 @@ public class RotationScheduler {
 
   private final AdvanceRotationService advanceRotationService;
   private final RotationStatePort rotationStatePort;
-  private final QueueConfigPort configPort;
-  private final AnnouncementPort announcementPort;
+  private final AnnouncementPoster announcementPoster;
 
   public RotationScheduler(
       AdvanceRotationService advanceRotationService,
       RotationStatePort rotationStatePort,
-      QueueConfigPort configPort,
-      AnnouncementPort announcementPort) {
+      AnnouncementPoster announcementPoster) {
     this.advanceRotationService = advanceRotationService;
     this.rotationStatePort = rotationStatePort;
-    this.configPort = configPort;
-    this.announcementPort = announcementPort;
+    this.announcementPoster = announcementPoster;
   }
 
   @Scheduled(fixedDelayString = "${queue.rotation.tick}")
@@ -63,21 +58,10 @@ public class RotationScheduler {
     for (long guildId : rotationStatePort.guildsWithState()) {
       try {
         AdvanceResult result = advanceRotationService.advanceDue(guildId, now);
-        result.finalAnnouncement().ifPresent(view -> postAnnouncement(guildId, view));
+        result.finalAnnouncement().ifPresent(view -> announcementPoster.post(guildId, view));
       } catch (RuntimeException e) {
         log.warn("Rotation advance failed for guild {}: {}", guildId, e.toString());
       }
     }
-  }
-
-  private void postAnnouncement(long guildId, AnnouncementView view) {
-    configPort
-        .get(guildId)
-        .announcementChannel()
-        .ifPresent(
-            channelId -> {
-              long messageId = announcementPort.post(guildId, channelId, view);
-              configPort.setLatestAnnouncement(guildId, channelId, messageId);
-            });
   }
 }

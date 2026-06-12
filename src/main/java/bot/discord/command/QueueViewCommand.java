@@ -58,20 +58,25 @@ public class QueueViewCommand implements SlashCommandHandler {
   }
 
   private net.dv8tion.jda.api.entities.MessageEmbed buildEmbed(QueueView view) {
-    EmbedBuilder embed = new EmbedBuilder();
+    // Mentions and markdown only render in the embed DESCRIPTION/fields, never the title — so the
+    // current game (with its proposer mention) goes in the description, and the title stays static.
+    EmbedBuilder embed = new EmbedBuilder().setTitle("🎮 Game Queue");
+    StringBuilder body = new StringBuilder();
+
     view.currentGame()
         .ifPresentOrElse(
             current -> {
-              embed.setTitle(
+              body.append(
                   messages.get(
                       "queue.reply.view.current", current.gameName(), current.proposerId()));
               if (current.coverUrl() != null && !current.coverUrl().isBlank()) {
                 embed.setImage(current.coverUrl());
               }
             },
-            () -> embed.setTitle(messages.get("queue.reply.view.no-current")));
+            () -> body.append(messages.get("queue.reply.view.no-current")));
+    body.append("\n\n").append(describeQueue(view));
 
-    embed.setDescription(describeQueue(view));
+    embed.setDescription(body.toString());
     embed.setFooter(
         view.eligibleToPropose()
             ? messages.get("queue.reply.view.eligible")

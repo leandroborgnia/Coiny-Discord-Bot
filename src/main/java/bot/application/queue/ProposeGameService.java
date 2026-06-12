@@ -5,10 +5,12 @@ import bot.domain.coin.AdjustmentType;
 import bot.domain.coin.CoinLedgerPort;
 import bot.domain.coin.NewMovement;
 import bot.domain.coin.PostingPlan;
+import bot.domain.queue.AnnouncementView;
 import bot.domain.queue.CapturedGame;
 import bot.domain.queue.CooldownPolicy;
 import bot.domain.queue.CooldownPort;
 import bot.domain.queue.GameIdentity;
+import bot.domain.queue.GuildQueueConfig;
 import bot.domain.queue.NewSlot;
 import bot.domain.queue.NotEligibleException;
 import bot.domain.queue.QueueConfigPort;
@@ -45,6 +47,7 @@ public class ProposeGameService {
   private final RotationStatePort rotationPort;
   private final UpvotePort upvotePort;
   private final CoinLedgerPort ledgerPort;
+  private final AnnouncementAssembler announcementAssembler;
 
   public ProposeGameService(
       QueuePort queuePort,
@@ -52,13 +55,15 @@ public class ProposeGameService {
       CooldownPort cooldownPort,
       RotationStatePort rotationPort,
       UpvotePort upvotePort,
-      CoinLedgerPort ledgerPort) {
+      CoinLedgerPort ledgerPort,
+      AnnouncementAssembler announcementAssembler) {
     this.queuePort = queuePort;
     this.configPort = configPort;
     this.cooldownPort = cooldownPort;
     this.rotationPort = rotationPort;
     this.upvotePort = upvotePort;
     this.ledgerPort = ledgerPort;
+    this.announcementAssembler = announcementAssembler;
   }
 
   @Transactional
@@ -110,7 +115,8 @@ public class ProposeGameService {
 
     // Affordability (FR-002): builds the balanced spend; throws InsufficientCoinsException if
     // short.
-    int proposeCost = configPort.get(guildId).proposeCost();
+    GuildQueueConfig config = configPort.get(guildId);
+    int proposeCost = config.proposeCost();
     ledgerPort.lockAccount(guildId, memberId);
     int balance = ledgerPort.currentBalance(guildId, memberId);
     PostingPlan plan =
@@ -133,8 +139,14 @@ public class ProposeGameService {
       rotationPort.bootstrap(guildId, slot.id(), now);
       cooldownPort.set(guildId, memberId, 0);
       postSpend(guildId, memberId, plan, interactionId);
+      // Announce the freshly designated game (FR-024/FR-036), if a channel is configured. Assembled
+      // in-transaction (current slot is now this game); the handler posts it after commit.
+      Optional<AnnouncementView> announcement =
+          config.hasAnnouncementChannel()
+              ? announcementAssembler.assemble(guildId)
+              : Optional.empty();
       return new ProposeGameResult(
-          Outcome.INSTANT_POPPED, 0, true, proposeCost, balance - proposeCost);
+          Outcome.INSTANT_POPPED, 0, true, proposeCost, balance - proposeCost, announcement);
     }
 
     // Normal proposal: append at the tail.

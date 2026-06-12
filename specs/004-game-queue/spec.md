@@ -380,7 +380,8 @@ button in a second copy of the same queue message does not double-count.
 - **FR-024**: When there is no current week's game (the initial state before any game has been
   designated, or immediately after a weekly advance found the queue empty), the next game proposed MUST
   be designated the current week's game immediately ("instant pop") instead of waiting in the queue.
-  For cooldown purposes this counts as the proposer's game being played with `N = 0`.
+  For cooldown purposes this counts as the proposer's game being played with `N = 0`. The instant-pop
+  is a designation like any other: if an announcement channel is configured, it is announced (FR-036).
 - **FR-025**: The default propose cost MUST be 1 coin and the default bump cost MUST be 1 coin per
   bump; both remain per-server configurable (FR-017). A member whose game is already at the top cannot
   bump and simply waits (per FR-006).
@@ -435,7 +436,8 @@ button in a second copy of the same queue message does not double-count.
   game was recognized — suggesting they check whether their activity / Rich Presence sharing is
   disabled in their Discord settings or permissions.
 - **FR-036**: If a per-server announcement channel is configured, the system MUST automatically post
-  the newly designated week's game (with its key art) to that channel on each weekly advance, and MUST
+  the newly designated week's game (with its key art) to that channel on each weekly advance **and on
+  the bootstrap instant-pop (FR-024)** — every time a game becomes the current week's game — and MUST
   include an "up next" preview listing the next 5 upcoming queued games with small thumbnails, names,
   and their current upvote counts. This newest announcement message is the live count surface kept up
   to date per FR-038. If no announcement channel is configured, no announcement is posted (the rotation

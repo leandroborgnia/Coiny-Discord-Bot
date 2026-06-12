@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import bot.application.queue.ProposeGameResult.Outcome;
 import bot.domain.coin.CoinLedgerPort;
+import bot.domain.queue.AnnouncementView;
 import bot.domain.queue.CapturedGame;
 import bot.domain.queue.CooldownPort;
 import bot.domain.queue.GameIdentity;
@@ -49,6 +50,7 @@ class ProposeGameServiceTest {
   @Mock private RotationStatePort rotationPort;
   @Mock private UpvotePort upvotePort;
   @Mock private CoinLedgerPort ledgerPort;
+  @Mock private AnnouncementAssembler announcementAssembler;
 
   private ProposeGameService service;
 
@@ -56,7 +58,13 @@ class ProposeGameServiceTest {
   void setUp() {
     service =
         new ProposeGameService(
-            queuePort, configPort, cooldownPort, rotationPort, upvotePort, ledgerPort);
+            queuePort,
+            configPort,
+            cooldownPort,
+            rotationPort,
+            upvotePort,
+            ledgerPort,
+            announcementAssembler);
   }
 
   @Test
@@ -146,6 +154,25 @@ class ProposeGameServiceTest {
     verify(rotationPort).bootstrap(eq(GUILD), eq(1L), any());
     verify(cooldownPort).set(GUILD, MEMBER, 0);
     verify(ledgerPort).append(any(), any());
+  }
+
+  @Test
+  void instantPopWithAnnouncementChannelReturnsTheAnnouncement() {
+    when(queuePort.findByProposeInteraction(INTERACTION)).thenReturn(Optional.empty());
+    when(queuePort.ownQueued(GUILD, MEMBER)).thenReturn(Optional.empty());
+    when(cooldownPort.gamesRemaining(GUILD, MEMBER)).thenReturn(0);
+    when(configPort.get(GUILD)).thenReturn(new GuildQueueConfig(GUILD, 1, 1, 555L, null, null));
+    when(ledgerPort.currentBalance(GUILD, MEMBER)).thenReturn(5);
+    when(rotationPort.get(GUILD)).thenReturn(new RotationState(GUILD, null, 0, null));
+    when(queuePort.queued(GUILD)).thenReturn(List.of());
+    when(queuePort.append(any())).thenReturn(playedSlot(1L, 0, 1));
+    when(announcementAssembler.assemble(GUILD))
+        .thenReturn(Optional.of(new AnnouncementView(GUILD, "Hades", MEMBER, null, List.of())));
+
+    ProposeGameResult result = propose();
+
+    assertThat(result.outcome()).isEqualTo(Outcome.INSTANT_POPPED);
+    assertThat(result.announcement()).isPresent();
   }
 
   @Test

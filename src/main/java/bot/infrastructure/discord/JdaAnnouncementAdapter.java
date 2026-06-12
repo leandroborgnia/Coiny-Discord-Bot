@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,7 +28,10 @@ public class JdaAnnouncementAdapter implements AnnouncementPort {
   private final JDA jda;
   private final QueueMessages messages;
 
-  public JdaAnnouncementAdapter(JDA jda, QueueMessages messages) {
+  // JDA is injected @Lazy to break the startup cycle jda -> buttonRouter -> upvoteButtonHandler ->
+  // this adapter -> jda. This adapter only touches JDA when posting/editing an announcement (well
+  // after startup), so the lazy proxy resolves to the real JDA on first use.
+  public JdaAnnouncementAdapter(@Lazy JDA jda, QueueMessages messages) {
     this.jda = jda;
     this.messages = messages;
   }

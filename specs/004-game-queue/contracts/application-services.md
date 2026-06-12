@@ -12,8 +12,9 @@ Lock order in every mutating service: **queue lock → account lock** (see resea
 
 **Request** `ProposeGameRequest(long guildId, long memberId, CapturedGame game /*nullable*/, long interactionId)`
 
-**Result** `ProposeGameResult(Outcome outcome, int position, boolean instantPop, int coinsSpent, int newBalance)`
-where `Outcome ∈ {PROPOSED, INSTANT_POPPED, REPLACED, DUPLICATE, NO_ACTIVITY, INSUFFICIENT, NOT_ELIGIBLE}`.
+**Result** `ProposeGameResult(Outcome outcome, int position, boolean instantPop, int coinsSpent, int newBalance, Optional<AnnouncementView> announcement)`
+where `Outcome ∈ {PROPOSED, INSTANT_POPPED, REPLACED, DUPLICATE, NO_ACTIVITY}` (INSUFFICIENT/NOT_ELIGIBLE
+are thrown). `announcement` is present only on an instant-pop with a channel configured (FR-024/FR-036).
 
 **Algorithm**:
 1. **No-activity guard**: `game == null` → return `NO_ACTIVITY` (no lock, no charge — FR-035).
@@ -32,7 +33,9 @@ where `Outcome ∈ {PROPOSED, INSTANT_POPPED, REPLACED, DUPLICATE, NO_ACTIVITY, 
 7. **Bootstrap instant-pop** (FR-024): if `rotationState.current_slot_id` is null **and** queue empty:
    create slot already `PLAYED` (week 0) with a fresh `game_instance_id`, `recordDesignation`,
    `rotationStatePort.bootstrap(...)`, `cooldownPort.set(guildId, memberId, 0)`, post `QUEUE_PROPOSE`
-   spend, return `INSTANT_POPPED`.
+   spend. If an announcement channel is configured, assemble the announcement in-transaction (the
+   current slot is now this game) and return it on the result so the handler posts it after commit
+   (FR-036) — the instant-pop announces like any designation. Return `INSTANT_POPPED`.
 8. **Normal**: `append(NewSlot status=QUEUED, position=tail, coinsSpent=proposeCost,
    gameInstanceId=UUID.randomUUID(), propose_interaction_id=interactionId, …)`; post `QUEUE_PROPOSE`
    spend (`MEMBER −cost / POT +cost`) via `coinLedgerPort.append` (interaction-id idempotent); return

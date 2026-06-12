@@ -433,3 +433,16 @@ quickstart). Each story is independently testable and keeps `./mvnw verify` gree
   upserts every bean's `commandData()` per guild) — so no dedicated registration task exists; the
   upvote button registers via `ButtonInteractionRouter` (T052), and T059 asserts the whole surface
   registers without collision.
+
+## Post-completion adjustments (dev validation)
+- **Instant-pop announces** (spec FR-024/FR-036 updated): the bootstrap instant-pop now posts the
+  announcement when a channel is configured, not just the weekly advance. `ProposeGameService`
+  assembles it in-transaction (via the shared `AnnouncementAssembler`) and returns it on
+  `ProposeGameResult`; `ProposeCommand` posts it after commit through the new `AnnouncementPoster`
+  (also used by `RotationScheduler`). Covered by `ProposeGameServiceTest`.
+- **Runtime fixes found on dev (not catchable by the discord-disabled test suite):** broke the JDA
+  startup bean cycle with `@Lazy` on `JdaAnnouncementAdapter`'s `JDA`; ran the blocking presence
+  capture off the gateway thread (`ProposeCommand` worker) so `retrieveMembersByIds(...).get()` no
+  longer deadlocks; moved the current-game line (proposer mention) out of the embed **title** (titles
+  don't render mentions/markdown). Launch scripts now prompt for the optional `IGDB_CLIENT_ID`/
+  `IGDB_CLIENT_SECRET`.

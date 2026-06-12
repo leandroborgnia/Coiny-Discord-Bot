@@ -49,9 +49,24 @@ prompt_secret() {  # $1=var name  $2=label  $3=hidden(1/0)
   printf -v "$1" '%s' "$_val"
 }
 
+# Optional secret: blank/Enter is accepted (the feature degrades gracefully when unset).
+prompt_optional() {  # $1=var name  $2=label  $3=hidden(1/0)
+  local _val=""
+  if [ "$3" = "1" ]; then
+    read -r -s -p "$2 (optional — Enter to skip): " _val; echo
+  else
+    read -r -p "$2 (optional — Enter to skip): " _val
+  fi
+  printf -v "$1" '%s' "$_val"
+}
+
 prompt_secret DB_PASSWORD   "Database password"      0
 prompt_secret DISCORD_TOKEN "Discord token (hidden)" 1
-export DB_PASSWORD DISCORD_TOKEN
+# IGDB cover-art credentials (Twitch OAuth). Blank => the art resolver is a disabled no-op and the
+# queue renders name-only — everything else works.
+prompt_optional IGDB_CLIENT_ID     "IGDB client id"              0
+prompt_optional IGDB_CLIENT_SECRET "IGDB client secret (hidden)" 1
+export DB_PASSWORD DISCORD_TOKEN IGDB_CLIENT_ID IGDB_CLIENT_SECRET
 
 # --- bring up app + database together ---
 echo "Starting dev stack (app + Postgres)..."
