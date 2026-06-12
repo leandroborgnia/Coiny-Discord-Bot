@@ -24,4 +24,11 @@ public record PostingLine(LedgerAccount account, Long memberId, int signedAmount
   public static PostingLine forfeit(int signedAmount) {
     return new PostingLine(LedgerAccount.FORFEIT, null, signedAmount);
   }
+
+  /**
+   * The per-guild queue pot — the balanced counter-party for queue spends/refunds (feature 004).
+   */
+  public static PostingLine pot(int signedAmount) {
+    return new PostingLine(LedgerAccount.POT, null, signedAmount);
+  }
 }

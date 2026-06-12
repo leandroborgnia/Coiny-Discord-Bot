@@ -3,6 +3,10 @@ package bot.infrastructure.discord;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,11 +32,19 @@ public class JdaConfig {
       throw new IllegalStateException(
           "DISCORD_TOKEN must be provided (set it in the environment; never commit it)");
     }
-    // JDA always receives guild create/join events, so getGuilds() is populated and GuildJoinEvent
-    // fires without any extra intent. Slash-command interactions are delivered regardless of
-    // intents.
+    // GUILD_PRESENCES + GUILD_MEMBERS are PRIVILEGED intents — both must be enabled for this bot in
+    // the Discord Developer Portal (Bot → Privileged Gateway Intents). GUILD_PRESENCES is needed to
+    // read a member's live Rich Presence when they propose (FR-026); GUILD_MEMBERS lets us fetch a
+    // single member on demand. We retain NOTHING: MemberCachePolicy.NONE + ChunkingFilter.NONE keep
+    // memory flat at any scale, and PresenceReader reads the activity via an on-demand
+    // retrieveMembersByIds(true, id) only at propose time (Complexity Tracking; Principle V).
+    // CacheFlag.ACTIVITY enables activity data on the members we explicitly fetch.
     JDA jda =
-        JDABuilder.createLight(properties.token())
+        JDABuilder.createLight(
+                properties.token(), GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MEMBERS)
+            .enableCache(CacheFlag.ACTIVITY)
+            .setMemberCachePolicy(MemberCachePolicy.NONE)
+            .setChunkingFilter(ChunkingFilter.NONE)
             .addEventListeners(router, registrar)
             .setActivity(Activity.playing("/ping"))
             .build();

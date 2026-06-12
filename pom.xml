@@ -35,6 +35,14 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- JSON (Jackson) for the IGDB cover-art client. JDA ships jackson-databind only at
+         runtime scope, so a compile-scope binding is required (no web server). Recorded in
+         specs/004-game-queue/plan.md per the Constitution dependency gate. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
+    </dependency>
+
     <!-- Schema migrations (Postgres-only) -->
     <dependency>
       <groupId>org.flywaydb</groupId>

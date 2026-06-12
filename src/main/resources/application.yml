@@ -13,7 +13,7 @@ spring:
     enabled: true
     locations: classpath:db/migration
   messages:
-    basename: messages/coin-messages
+    basename: messages/coin-messages,messages/queue-messages
     encoding: UTF-8
 
 discord:
@@ -24,3 +24,22 @@ coin:
   # Single source of truth for the /balance recent-history size (FR-013).
   history:
     default-limit: 10
+
+# Game queue & weekly rotation (feature 004).
+queue:
+  rotation:
+    # How often the scheduler checks whether a whole 7-day period is due (ISO-8601 duration).
+    # This is the resolution of lateness, NOT a pop cadence: a due advance is applied within
+    # one tick. The pop condition itself is elapsed-time-derived (now - last_pop >= 7d).
+    tick: PT1H
+  view:
+    # How many upcoming queued games the view/announcement shows after the current game.
+    next: 5
+  art:
+    igdb:
+      enabled: true
+      base-url: https://api.igdb.com/v4
+      # Twitch OAuth client-credentials for IGDB cover art. Blank/absent => resolver is a
+      # disabled no-op (art falls back to name-only); never committed — injected by Compose.
+      client-id: ${IGDB_CLIENT_ID:}
+      client-secret: ${IGDB_CLIENT_SECRET:}

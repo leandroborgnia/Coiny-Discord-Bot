@@ -26,17 +26,17 @@ disabled no-op without credentials.
 
 **Purpose**: Configuration, i18n, scheduling, and JDA intents the feature needs before any story.
 
-- [ ] T001 [P] Add the `queue:` config block (rotation tick interval default hourly, view `next=5`,
+- [X] T001 [P] Add the `queue:` config block (rotation tick interval default hourly, view `next=5`,
   `art.igdb.enabled`/`base-url`, `art.igdb.client-id`/`client-secret` as `${IGDB_CLIENT_ID}`/
   `${IGDB_CLIENT_SECRET}`) and change `spring.messages.basename` to
   `messages/coin-messages,messages/queue-messages` in `src/main/resources/application.yml`.
-- [ ] T002 [P] Create the i18n bundle `src/main/resources/messages/queue-messages.properties` with
+- [X] T002 [P] Create the i18n bundle `src/main/resources/messages/queue-messages.properties` with
   keys for every reply/error in `contracts/slash-commands.md` (proposed/instant-pop/replaced/
   duplicate/no-activity/insufficient/cooldown/withdrawn/bumped/at-top/no-queued/config/
   not-authorized).
-- [ ] T003 [P] Add `SchedulingConfig` with `@EnableScheduling` (guarded by `discord.enabled`) in
+- [X] T003 [P] Add `SchedulingConfig` with `@EnableScheduling` (guarded by `discord.enabled`) in
   `src/main/java/bot/infrastructure/schedule/SchedulingConfig.java`.
-- [ ] T004 Update `src/main/java/bot/infrastructure/discord/JdaConfig.java`: build JDA with
+- [X] T004 Update `src/main/java/bot/infrastructure/discord/JdaConfig.java`: build JDA with
   `GatewayIntent.GUILD_PRESENCES` + `GUILD_MEMBERS`, `enableCache(CacheFlag.ACTIVITY)`, and a
   **non-retaining** `MemberCachePolicy.NONE` with no eager member chunking (no roster/presence held in
   memory — memory stays flat at any scale); keep the `discord.enabled` gate. Add a code comment that
@@ -45,7 +45,7 @@ disabled no-op without credentials.
   component that, given a guild + member id, calls `guild.retrieveMembersByIds(true, memberId)`
   (verified JDA 5.2.1 API: `Task<List<Member>> retrieveMembersByIds(boolean includePresence, long...)`),
   reads the first `ActivityType.PLAYING` activity, and maps it to `CapturedGame` (empty when none).
-- [ ] T005 [P] Add `spring-boot-starter-json` to `pom.xml` (compile scope, version managed by the
+- [X] T005 [P] Add `spring-boot-starter-json` to `pom.xml` (compile scope, version managed by the
   Spring Boot BOM — no version pin, no web server). **Why required**: JDA declares `jackson-databind`
   at **`runtime`** scope, so it is *not* on the compile classpath — the IGDB resolver's Jackson imports
   would not compile without this starter. This is the **only** new Maven coordinate in the feature and
@@ -61,7 +61,7 @@ depends on.
 
 **⚠️ CRITICAL**: No user-story work begins until this phase is complete.
 
-- [ ] T006 Create `src/main/resources/db/migration/V3__game_queue.sql` (V2 untouched): the 7 tables
+- [X] T006 Create `src/main/resources/db/migration/V3__game_queue.sql` (V2 untouched): the 7 tables
   (`guild_queue_config`, `queue_entry`, `queue_upvote`, `queue_rotation_state`, `weekly_designation`,
   `queue_cooldown`, `game_art_cache`) with the indexes/partial-unique constraints from
   `data-model.md`. `queue_entry` includes `game_instance_id uuid NOT NULL DEFAULT gen_random_uuid()`
@@ -72,34 +72,34 @@ depends on.
   table-level `coin_ledger_entry_check` is a different constraint and must NOT be dropped), then
   `ALTER ... DROP/ADD coin_ledger_entry_account_check` to add `'POT'` and
   `ALTER ... DROP/ADD coin_movement_type_check` to add `'QUEUE_PROPOSE','QUEUE_BUMP','QUEUE_REFUND'`.
-- [ ] T007 [P] Add `POT` to the `LedgerAccount` enum in
+- [X] T007 [P] Add `POT` to the `LedgerAccount` enum in
   `src/main/java/bot/domain/coin/LedgerAccount.java`.
-- [ ] T008 [P] Create pure-domain value objects in `src/main/java/bot/domain/queue/`: `CapturedGame`,
+- [X] T008 [P] Create pure-domain value objects in `src/main/java/bot/domain/queue/`: `CapturedGame`,
   `GameIdentity` (with `of(CapturedGame)` + `normalize(name)`), `QueueSlot` (incl. a `UUID
   gameInstanceId` field — the per-appearance id, distinct from `GameIdentity`), `QueueView`. No
   framework imports.
-- [ ] T009 [P] Create domain exceptions (extending `bot.domain.DomainException`) in
+- [X] T009 [P] Create domain exceptions (extending `bot.domain.DomainException`) in
   `src/main/java/bot/domain/queue/`: `InsufficientCoinsException`, `NotEligibleException(int
   gamesRemaining)`, `NoQueuedGameException`, `NoGameActivityException`, `NotAuthorizedException`
   (raised by `ConfigureQueueService` when the actor lacks Manage Server). **No `AlreadyAtTopException`
   or `NotSlotOwnerException`**: bump returns an `AT_TOP` result outcome (not a throw), and acting only
   on the caller's own slot makes a "not owner" case structurally impossible — FR-005 is satisfied by
   construction, so neither exception nor a not-owner reply is needed.
-- [ ] T010 [P] Define the outbound port interfaces + carrier records in
+- [X] T010 [P] Define the outbound port interfaces + carrier records in
   `src/main/java/bot/domain/queue/`: `QueuePort`, `QueueConfigPort`, `UpvotePort`,
   `RotationStatePort`, `CooldownPort`, `ArtCachePort`, `ArtResolverPort`, `AnnouncementPort` and
   carriers (`NewSlot` — carries a fresh `gameInstanceId`, `RotationState`, `GuildQueueConfig`
   (finding F2: not `QueueQueueConfig`), `ArtEntry`, `ArtSource`, `AnnouncementView`, `AnnouncementRef`)
   per `data-model.md`. `UpvotePort.toggle`/`count` take a `UUID gameInstanceId`; `QueuePort` exposes
   `currentInstance(slotId)` and `replaceGame(..., UUID newInstanceId)`. Domain/JDK types only.
-- [ ] T011 Implement the pure `QueueLedgerPolicy` (`planSpend`, `planRefund` building balanced
+- [X] T011 Implement the pure `QueueLedgerPolicy` (`planSpend`, `planRefund` building balanced
   `bot.domain.coin.PostingPlan`s; throws `InsufficientCoinsException`) in
   `src/main/java/bot/domain/queue/QueueLedgerPolicy.java`, with a unit test
   `src/test/java/bot/domain/queue/QueueLedgerPolicyTest.java` (zero-sum lines, overdraw throws).
-- [ ] T012 [P] Create the JPA entities + Spring Data repositories for all 7 tables in
+- [X] T012 [P] Create the JPA entities + Spring Data repositories for all 7 tables in
   `src/main/java/bot/infrastructure/persistence/queue/` (`*Entity` + `*JpaRepository`; `jsonb`
   snapshot mapped as `String`/`@JdbcTypeCode`).
-- [ ] T013 [P] Add the `QueueMessages` i18n helper (mirrors `CoinMessages`) in
+- [X] T013 [P] Add the `QueueMessages` i18n helper (mirrors `CoinMessages`) in
   `src/main/java/bot/discord/command/QueueMessages.java`.
 
 **Checkpoint**: Schema, domain, ports, entities, and the POT ledger extension are ready.

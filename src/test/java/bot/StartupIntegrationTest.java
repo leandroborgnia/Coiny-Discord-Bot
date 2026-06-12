@@ -21,7 +21,8 @@ class StartupIntegrationTest extends AbstractPostgresIntegrationTest {
   void migrationAppliedAndSeedRowExists() {
     MigrationInfo current = flyway.info().current();
     assertThat(current).isNotNull();
-    assertThat(current.getVersion().getVersion()).isEqualTo("2");
+    // Head migration is V3 (game queue, feature 004); bump this when a new V<n> ships.
+    assertThat(current.getVersion().getVersion()).isEqualTo("3");
 
     Integer count = jdbcTemplate.queryForObject("select count(*) from health_check", Integer.class);
     assertThat(count).isEqualTo(1);
