@@ -24,7 +24,15 @@ class CommandSurfaceTest extends AbstractPostgresIntegrationTest {
     Set<String> names =
         handlers.stream().map(SlashCommandHandler::name).collect(Collectors.toSet());
 
-    assertThat(names).containsExactlyInAnyOrder("ping", "balance", "coins-adjust", "coins-config");
+    assertThat(names)
+        .containsExactlyInAnyOrder(
+            "ping",
+            "balance",
+            "coins-adjust",
+            "coins-config",
+            "queue-propose",
+            "queue-withdraw",
+            "queue-view");
   }
 
   @Test

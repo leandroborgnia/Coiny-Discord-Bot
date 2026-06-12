@@ -24,6 +24,9 @@ public interface QueuePort {
   /** Look up a slot by its propose idempotency (interaction) id, if already applied. */
   Optional<QueueSlot> findByProposeInteraction(long proposeInteractionId);
 
+  /** Look up any slot by id (e.g. the current designated game, which is PLAYED), if it exists. */
+  Optional<QueueSlot> findSlot(long slotId);
+
   /** Append a slot; idempotent on {@code proposeInteractionId}. Returns the stored slot. */
   QueueSlot append(NewSlot slot);
 

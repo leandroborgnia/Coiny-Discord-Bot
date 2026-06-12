@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.Activity.ActivityType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.RichPresence;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,13 +17,12 @@ import org.springframework.stereotype.Component;
  * (MemberCachePolicy.NONE in {@link JdaConfig}). The fetch blocks briefly and MUST be called only
  * after the handler has deferred the interaction (Principle V). Returns empty when the member
  * shares no readable game activity, or on any fetch failure.
+ *
+ * <p>Holds no JDA reference (the {@link Guild} is supplied per call), so it is an unconditional
+ * bean — available even when Discord is disabled in tests; {@code capture} is simply never invoked
+ * there.
  */
 @Component
-@ConditionalOnProperty(
-    prefix = "discord",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
 public class PresenceReader {
 
   /** Capture the member's current game, or empty when none is readable. */

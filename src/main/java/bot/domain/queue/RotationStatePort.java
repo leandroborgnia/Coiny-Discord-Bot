@@ -1,12 +1,16 @@
 package bot.domain.queue;
 
 import java.time.Instant;
+import java.util.List;
 
 /** Outbound port for the per-guild rotation clock and the append-only weekly-designation log. */
 public interface RotationStatePort {
 
   /** The guild's rotation state (uninitialized when no game has ever been designated). */
   RotationState get(long guildId);
+
+  /** Every guild that has a rotation clock (was bootstrapped) — the set the catch-up iterates. */
+  List<Long> guildsWithState();
 
   /** First instant-pop: set the current slot and start the rolling-7-day clock (FR-024). */
   void bootstrap(long guildId, long slotId, Instant at);

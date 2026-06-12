@@ -117,59 +117,59 @@ withdraw → slot gone + refund.
 
 ### Tests for User Story 1 ⚠️ (write first; ensure they fail)
 
-- [ ] T014 [P] [US1] Unit test `QueueOrderingPolicy` (append-tail, shift-up) in
+- [X] T014 [P] [US1] Unit test `QueueOrderingPolicy` (append-tail, shift-up) in
   `src/test/java/bot/domain/queue/QueueOrderingPolicyTest.java`.
-- [ ] T015 [P] [US1] Unit test `CooldownPolicy` (eligibility, N at pop, decrement, N=0) in
+- [X] T015 [P] [US1] Unit test `CooldownPolicy` (eligibility, N at pop, decrement, N=0) in
   `src/test/java/bot/domain/queue/CooldownPolicyTest.java`.
-- [ ] T016 [P] [US1] Testcontainers integration test for `JpaQueueAdapter`: tail append, partial-unique
+- [X] T016 [P] [US1] Testcontainers integration test for `JpaQueueAdapter`: tail append, partial-unique
   (one queued slot per member; unique position), `propose_interaction_id` idempotency
   (`ON CONFLICT`), concurrent-propose advisory-lock serialization, **per-server isolation (C2)** —
   two guilds' queues/positions/`ownQueued` never interfere — and **departed-proposer retention (C3)** —
   a slot persists and renders by its stored `proposer_member_id` regardless of membership — in
   `src/test/java/bot/infrastructure/persistence/queue/JpaQueueAdapterTest.java`.
-- [ ] T017 [P] [US1] Testcontainers test that propose/withdraw post balanced `MEMBER↔POT` entries and
+- [X] T017 [P] [US1] Testcontainers test that propose/withdraw post balanced `MEMBER↔POT` entries and
   that `/balance`'s derived `SUM` reflects them, incl. refund reversal, in
   `src/test/java/bot/infrastructure/persistence/queue/QueuePotLedgerTest.java`.
-- [ ] T018 [P] [US1] Service test `ProposeGameServiceTest` (Mockito ports): no-activity guard,
+- [X] T018 [P] [US1] Service test `ProposeGameServiceTest` (Mockito ports): no-activity guard,
   affordability, replace branch (free, resets upvotes), instant-pop bootstrap, eligibility, duplicate,
   in `src/test/java/bot/application/queue/ProposeGameServiceTest.java`.
-- [ ] T019 [P] [US1] Service test `WithdrawGameServiceTest` (refund amount = `coins_spent`, no-queued,
+- [X] T019 [P] [US1] Service test `WithdrawGameServiceTest` (refund amount = `coins_spent`, no-queued,
   duplicate) in `src/test/java/bot/application/queue/WithdrawGameServiceTest.java`.
 
 ### Implementation for User Story 1
 
-- [ ] T020 [P] [US1] Implement the pure `QueueOrderingPolicy` (append-tail, bump-swap, shift-up) in
+- [X] T020 [P] [US1] Implement the pure `QueueOrderingPolicy` (append-tail, bump-swap, shift-up) in
   `src/main/java/bot/domain/queue/QueueOrderingPolicy.java`.
-- [ ] T021 [P] [US1] Implement the pure `CooldownPolicy` (N, eligibility, decrement) in
+- [X] T021 [P] [US1] Implement the pure `CooldownPolicy` (N, eligibility, decrement) in
   `src/main/java/bot/domain/queue/CooldownPolicy.java`.
-- [ ] T022 [US1] Implement `JpaQueueAdapter` (`lockQueue` via `pg_advisory_xact_lock`, `queued`,
+- [X] T022 [US1] Implement `JpaQueueAdapter` (`lockQueue` via `pg_advisory_xact_lock`, `queued`,
   `ownQueued`, `findByProposeInteraction`, `append` with `ON CONFLICT DO NOTHING` setting a fresh
   `game_instance_id`, `replaceGame(..., UUID newInstanceId)` writing the new instance, `currentInstance`,
   `withdraw`, `top`, `markPlayed`, `shiftUp`, `otherQueuedCount`) in
   `src/main/java/bot/infrastructure/persistence/queue/JpaQueueAdapter.java`.
-- [ ] T023 [P] [US1] Implement `JpaQueueConfigAdapter` (`get` with defaults 1/1, `upsertCosts`) in
+- [X] T023 [P] [US1] Implement `JpaQueueConfigAdapter` (`get` with defaults 1/1, `upsertCosts`) in
   `src/main/java/bot/infrastructure/persistence/queue/JpaQueueConfigAdapter.java`.
-- [ ] T024 [P] [US1] Implement `JpaCooldownAdapter` (`gamesRemaining`, `set`) and minimal
+- [X] T024 [P] [US1] Implement `JpaCooldownAdapter` (`gamesRemaining`, `set`) and minimal
   `JpaRotationStateAdapter` (`get`, `bootstrap`, `recordDesignation`) needed for instant-pop, in
   `src/main/java/bot/infrastructure/persistence/queue/`.
-- [ ] T025 [P] [US1] Implement `JpaUpvoteAdapter.resetForSlot` (used by replace) in
+- [X] T025 [P] [US1] Implement `JpaUpvoteAdapter.resetForSlot` (used by replace) in
   `src/main/java/bot/infrastructure/persistence/queue/JpaUpvoteAdapter.java`.
-- [ ] T026 [US1] Implement `ProposeGameService` (`@Transactional`; lock order queue→account;
+- [X] T026 [US1] Implement `ProposeGameService` (`@Transactional`; lock order queue→account;
   no-activity/replace/eligibility/affordability/instant-pop/normal per `contracts/`; mint a fresh
   `gameInstanceId` on a new slot and **regenerate it on replace** before `resetForSlot`) with
   `ProposeGameRequest`/`ProposeGameResult` in `src/main/java/bot/application/queue/`. (Depends on
   T011, T020–T025.)
-- [ ] T027 [US1] Implement `WithdrawGameService` (+ `WithdrawGameRequest`/`Result`; refund via
+- [X] T027 [US1] Implement `WithdrawGameService` (+ `WithdrawGameRequest`/`Result`; refund via
   `QueueLedgerPolicy.planRefund`) in `src/main/java/bot/application/queue/`.
-- [ ] T028 [US1] Implement the thin `ProposeCommand` (`/queue-propose`: **defer ephemeral first** →
+- [X] T028 [US1] Implement the thin `ProposeCommand` (`/queue-propose`: **defer ephemeral first** →
   `PresenceReader.capture(guild, memberId)` via the on-demand `retrieveMembersByIds(true, …)` fetch →
   build `CapturedGame` (or none → no-activity guard) → delegate → render) in
   `src/main/java/bot/discord/command/ProposeCommand.java`. Any member currently playing a game may
   propose (no voice requirement). The presence fetch happens **after** the defer, so the 2.5 s ack
   deadline is met (Principle V).
-- [ ] T029 [US1] Implement the thin `WithdrawCommand` (`/queue-withdraw`) in
+- [X] T029 [US1] Implement the thin `WithdrawCommand` (`/queue-withdraw`) in
   `src/main/java/bot/discord/command/WithdrawCommand.java`.
-- [ ] T030 [US1] Add the US1 reply/error keys to `queue-messages.properties` and a
+- [X] T030 [US1] Add the US1 reply/error keys to `queue-messages.properties` and a
   `QueueMessagesTest` assertion that every referenced key resolves, in
   `src/test/java/bot/discord/command/QueueMessagesTest.java`.
 
@@ -195,9 +195,9 @@ again for the same week is a no-op; empty queue → no designation; downtime →
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T031 [P] [US2] Unit test `RotationPolicy.advancesDue`/`nextPopAt` (rolling 7d, zero, multi-period)
+- [X] T031 [P] [US2] Unit test `RotationPolicy.advancesDue`/`nextPopAt` (rolling 7d, zero, multi-period)
   in `src/test/java/bot/domain/queue/RotationPolicyTest.java`.
-- [ ] T032 [P] [US2] Testcontainers test `AdvanceRotationServiceIT`: pop+shift+designate, idempotent
+- [X] T032 [P] [US2] Testcontainers test `AdvanceRotationServiceIT`: pop+shift+designate, idempotent
   `UNIQUE(guild,week)` double-advance no-op, empty-week no designation & no cooldown decrement,
   cooldown N set at pop + guild-wide decrement on real pops, multi-period catch-up applies each once,
   **single-announcement guarantee (C1)** — one advance yields at most one `AnnouncementView` to post,
@@ -207,22 +207,22 @@ again for the same week is a no-op; empty queue → no designation; downtime →
 
 ### Implementation for User Story 2
 
-- [ ] T033 [P] [US2] Implement the pure `RotationPolicy` (`advancesDue`, `nextPopAt`) in
+- [X] T033 [P] [US2] Implement the pure `RotationPolicy` (`advancesDue`, `nextPopAt`) in
   `src/main/java/bot/domain/queue/RotationPolicy.java`.
-- [ ] T034 [US2] Extend `JpaRotationStateAdapter` with `advanceClock` and `JpaCooldownAdapter` with
+- [X] T034 [US2] Extend `JpaRotationStateAdapter` with `advanceClock` and `JpaCooldownAdapter` with
   `decrementAll`; ensure `recordDesignation` uses `ON CONFLICT (guild_id, week_number) DO NOTHING`.
-- [ ] T035 [US2] Implement `AdvanceRotationService` (`advanceDue`, `catchUpAll`; lock queue; per-period
+- [X] T035 [US2] Implement `AdvanceRotationService` (`advanceDue`, `catchUpAll`; lock queue; per-period
   loop; sets cooldown N=`otherQueuedCount`, decrements others only on real pops; returns the **final**
   `AnnouncementView`) in `src/main/java/bot/application/queue/AdvanceRotationService.java`.
-- [ ] T036 [US2] Implement `RotationScheduler` (`@Scheduled` fixed-delay tick over guilds +
+- [X] T036 [US2] Implement `RotationScheduler` (`@Scheduled` fixed-delay tick over guilds +
   `@EventListener(ApplicationReadyEvent)` startup catch-up; gated by `discord.enabled`) in
   `src/main/java/bot/infrastructure/schedule/RotationScheduler.java`.
-- [ ] T037 [US2] Implement `JdaAnnouncementAdapter.post` (current game + key art + "up next" 5;
+- [X] T037 [US2] Implement `JdaAnnouncementAdapter.post` (current game + key art + "up next" 5;
   returns message id) and store it as the guild's latest announcement via
   `QueueConfigPort.setLatestAnnouncement`, in
   `src/main/java/bot/infrastructure/discord/JdaAnnouncementAdapter.java` +
   `JpaQueueConfigAdapter.setAnnouncementChannel`/`setLatestAnnouncement`.
-- [ ] T038 [US2] Add rotation/announcement message keys to `queue-messages.properties`.
+- [X] T038 [US2] Add rotation/announcement message keys to `queue-messages.properties`.
 
 **Checkpoint**: MVP complete — proposals rotate weekly and survive downtime; `./mvnw verify` green.
 
@@ -238,28 +238,28 @@ beyond top 5 still shown/marked; cooldown visible; empty state clear.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T039 [P] [US3] Service test `ViewQueueServiceTest` (current+next5+own-marked-beyond-5+eligibility;
+- [X] T039 [P] [US3] Service test `ViewQueueServiceTest` (current+next5+own-marked-beyond-5+eligibility;
   **departed-proposer rendering (C3)** — a slot whose proposer is no longer a guild member still renders
   by the stored `proposer_member_id`) in
   `src/test/java/bot/application/queue/ViewQueueServiceTest.java`.
-- [ ] T040 [P] [US3] Test the art-resolution chain (RP asset → cache hit → cache miss→IGDB→store →
+- [X] T040 [P] [US3] Test the art-resolution chain (RP asset → cache hit → cache miss→IGDB→store →
   IGDB miss→NONE name-only → resolver disabled) with a Mockito `ArtResolverPort`/`ArtCachePort` in
   `src/test/java/bot/application/queue/ArtResolutionTest.java`.
-- [ ] T041 [P] [US3] Unit test `IgdbArtResolver` against a **stubbed** `HttpClient` (token cache, cover
+- [X] T041 [P] [US3] Unit test `IgdbArtResolver` against a **stubbed** `HttpClient` (token cache, cover
   parse, failure→empty, disabled-when-blank-creds), no network/secrets, in
   `src/test/java/bot/infrastructure/art/IgdbArtResolverTest.java`.
 
 ### Implementation for User Story 3
 
-- [ ] T042 [P] [US3] Implement `JpaArtCacheAdapter` (`lookup`, `store` incl. `NONE` miss) in
+- [X] T042 [P] [US3] Implement `JpaArtCacheAdapter` (`lookup`, `store` incl. `NONE` miss) in
   `src/main/java/bot/infrastructure/persistence/queue/JpaArtCacheAdapter.java`.
-- [ ] T043 [P] [US3] Implement `IgdbArtResolver` (`ArtResolverPort`; JDK `HttpClient`; Twitch OAuth
+- [X] T043 [P] [US3] Implement `IgdbArtResolver` (`ArtResolverPort`; JDK `HttpClient`; Twitch OAuth
   client-credentials with token caching; disabled no-op when creds blank) in
   `src/main/java/bot/infrastructure/art/IgdbArtResolver.java`.
-- [ ] T044 [US3] Implement the art-resolution chain helper (RP→cache→IGDB→name-only; never throws) and
+- [X] T044 [US3] Implement the art-resolution chain helper (RP→cache→IGDB→name-only; never throws) and
   wire it into a `ViewQueueService` (`@Transactional(readOnly=true)`, `ViewQueueRequest`→`QueueView`)
   in `src/main/java/bot/application/queue/ViewQueueService.java`.
-- [ ] T045 [US3] Implement the thin `QueueViewCommand` (`/queue-view`: ephemeral embed; per-slot
+- [X] T045 [US3] Implement the thin `QueueViewCommand` (`/queue-view`: ephemeral embed; per-slot
   `upvote:{slotId}:{gameInstanceId}` buttons attached but not yet handled until US5) in
   `src/main/java/bot/discord/command/QueueViewCommand.java`.
 
