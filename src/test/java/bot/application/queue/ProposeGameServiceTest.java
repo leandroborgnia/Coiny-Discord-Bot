@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import bot.application.queue.ProposeGameResult.Outcome;
 import bot.domain.coin.CoinLedgerPort;
+import bot.domain.participation.ParticipationConfigPort;
 import bot.domain.queue.AnnouncementView;
 import bot.domain.queue.CapturedGame;
 import bot.domain.queue.CooldownPort;
@@ -51,6 +52,7 @@ class ProposeGameServiceTest {
   @Mock private UpvotePort upvotePort;
   @Mock private CoinLedgerPort ledgerPort;
   @Mock private AnnouncementAssembler announcementAssembler;
+  @Mock private ParticipationConfigPort participationConfigPort;
 
   private ProposeGameService service;
 
@@ -64,7 +66,8 @@ class ProposeGameServiceTest {
             rotationPort,
             upvotePort,
             ledgerPort,
-            announcementAssembler);
+            announcementAssembler,
+            participationConfigPort);
   }
 
   @Test
@@ -125,6 +128,8 @@ class ProposeGameServiceTest {
     when(queuePort.ownQueued(GUILD, MEMBER)).thenReturn(Optional.empty());
     when(cooldownPort.gamesRemaining(GUILD, MEMBER)).thenReturn(0);
     when(configPort.get(GUILD)).thenReturn(GuildQueueConfig.defaults(GUILD));
+    when(rotationPort.get(GUILD)).thenReturn(new RotationState(GUILD, 99L, 1, Instant.now()));
+    when(queuePort.queued(GUILD)).thenReturn(List.of(queuedSlot(1L, 1, 1)));
     when(ledgerPort.currentBalance(GUILD, MEMBER)).thenReturn(0);
 
     assertThatThrownBy(this::propose).isInstanceOf(InsufficientCoinsException.class);
@@ -173,6 +178,51 @@ class ProposeGameServiceTest {
 
     assertThat(result.outcome()).isEqualTo(Outcome.INSTANT_POPPED);
     assertThat(result.announcement()).isPresent();
+  }
+
+  @Test
+  void freeFirstProposalWaivesCostInBootstrapState() {
+    when(queuePort.findByProposeInteraction(INTERACTION)).thenReturn(Optional.empty());
+    when(queuePort.ownQueued(GUILD, MEMBER)).thenReturn(Optional.empty());
+    when(cooldownPort.gamesRemaining(GUILD, MEMBER)).thenReturn(0);
+    when(configPort.get(GUILD)).thenReturn(GuildQueueConfig.defaults(GUILD));
+    when(rotationPort.get(GUILD)).thenReturn(new RotationState(GUILD, null, 0, null));
+    when(queuePort.queued(GUILD)).thenReturn(List.of());
+    when(participationConfigPort.freeFirstProposalEnabled(GUILD)).thenReturn(true);
+    when(ledgerPort.currentBalance(GUILD, MEMBER)).thenReturn(0);
+    when(queuePort.append(any())).thenReturn(playedSlot(1L, 0, 0));
+
+    ProposeGameResult result = propose();
+
+    assertThat(result.outcome()).isEqualTo(Outcome.INSTANT_POPPED);
+    assertThat(result.instantPop()).isTrue();
+    assertThat(result.coinsSpent()).isZero();
+    assertThat(result.newBalance()).isZero(); // balance unchanged — no charge, no balance check
+    verify(rotationPort)
+        .recordDesignation(eq(GUILD), eq(0), eq(1L), any(GameIdentity.class), any());
+    verify(rotationPort).bootstrap(eq(GUILD), eq(1L), any());
+    verify(cooldownPort).set(GUILD, MEMBER, 0);
+    verify(ledgerPort, never()).lockAccount(anyLong(), anyLong());
+    verify(ledgerPort, never()).append(any(), any()); // no coin movement
+  }
+
+  @Test
+  void freeProposalDoesNotApplyWhenACurrentGameExists() {
+    when(queuePort.findByProposeInteraction(INTERACTION)).thenReturn(Optional.empty());
+    when(queuePort.ownQueued(GUILD, MEMBER)).thenReturn(Optional.empty());
+    when(cooldownPort.gamesRemaining(GUILD, MEMBER)).thenReturn(0);
+    when(configPort.get(GUILD)).thenReturn(GuildQueueConfig.defaults(GUILD));
+    when(ledgerPort.currentBalance(GUILD, MEMBER)).thenReturn(5);
+    when(rotationPort.get(GUILD)).thenReturn(new RotationState(GUILD, 99L, 1, Instant.now()));
+    when(queuePort.queued(GUILD)).thenReturn(List.of(queuedSlot(1L, 1, 1)));
+    when(queuePort.append(any())).thenReturn(queuedSlot(2L, 2, 1));
+
+    ProposeGameResult result = propose();
+
+    assertThat(result.outcome()).isEqualTo(Outcome.PROPOSED);
+    assertThat(result.coinsSpent()).isEqualTo(1); // normal cost applies (FR-019)
+    verify(ledgerPort).append(any(), any());
+    verify(participationConfigPort, never()).freeFirstProposalEnabled(anyLong());
   }
 
   @Test

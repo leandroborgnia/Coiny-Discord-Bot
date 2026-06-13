@@ -43,3 +43,13 @@ queue:
       # disabled no-op (art falls back to name-only); never committed — injected by Compose.
       client-id: ${IGDB_CLIENT_ID:}
       client-secret: ${IGDB_CLIENT_SECRET:}
+
+# Participation earning (feature 005).
+participation:
+  sweep:
+    # How often the background sweep samples who is currently in a designated voice channel
+    # playing the current game (fixed delay, ISO-8601 duration). Crediting granularity = this tick.
+    tick: PT1M
+    # Gaps larger than this accrue 0 — downtime or session re-entry never credit retroactively
+    # (FR-023); the tick only resets last_sampled_at in that case.
+    max-gap: PT2M

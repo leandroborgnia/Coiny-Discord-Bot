@@ -5,6 +5,7 @@ import bot.domain.coin.AdjustmentType;
 import bot.domain.coin.CoinLedgerPort;
 import bot.domain.coin.NewMovement;
 import bot.domain.coin.PostingPlan;
+import bot.domain.participation.ParticipationConfigPort;
 import bot.domain.queue.AnnouncementView;
 import bot.domain.queue.CapturedGame;
 import bot.domain.queue.CooldownPolicy;
@@ -48,6 +49,7 @@ public class ProposeGameService {
   private final UpvotePort upvotePort;
   private final CoinLedgerPort ledgerPort;
   private final AnnouncementAssembler announcementAssembler;
+  private final ParticipationConfigPort participationConfigPort;
 
   public ProposeGameService(
       QueuePort queuePort,
@@ -56,7 +58,8 @@ public class ProposeGameService {
       RotationStatePort rotationPort,
       UpvotePort upvotePort,
       CoinLedgerPort ledgerPort,
-      AnnouncementAssembler announcementAssembler) {
+      AnnouncementAssembler announcementAssembler,
+      ParticipationConfigPort participationConfigPort) {
     this.queuePort = queuePort;
     this.configPort = configPort;
     this.cooldownPort = cooldownPort;
@@ -64,6 +67,7 @@ public class ProposeGameService {
     this.upvotePort = upvotePort;
     this.ledgerPort = ledgerPort;
     this.announcementAssembler = announcementAssembler;
+    this.participationConfigPort = participationConfigPort;
   }
 
   @Transactional
@@ -113,23 +117,48 @@ public class ProposeGameService {
       throw new NotEligibleException(gamesRemaining);
     }
 
-    // Affordability (FR-002): builds the balanced spend; throws InsufficientCoinsException if
-    // short.
     GuildQueueConfig config = configPort.get(guildId);
     int proposeCost = config.proposeCost();
+    GameIdentity identity = GameIdentity.of(game);
+    Instant now = Instant.now();
+
+    // Read the rotation/queue state before taking the account lock (the bootstrap test and the
+    // free-first-proposal waiver both decide off it; lock order stays queue → account).
+    RotationState rotation = rotationPort.get(guildId);
+    List<QueueSlot> queued = queuePort.queued(guildId);
+    boolean bootstrap = rotation.currentSlotId() == null && queued.isEmpty();
+
+    // Free-first-proposal waiver (FR-018): in the no-current-game + empty-queue bootstrap state
+    // with
+    // the toggle on, accept the proposal at no cost — no account lock, no spend, no coin movement,
+    // balance unchanged. Scoped exactly to that recurring cold-start state.
+    if (bootstrap && participationConfigPort.freeFirstProposalEnabled(guildId)) {
+      UUID instanceId = UUID.randomUUID();
+      QueueSlot slot =
+          queuePort.append(
+              NewSlot.instantPopped(
+                  guildId, memberId, game, identity, instanceId, 0, 0, interactionId));
+      rotationPort.recordDesignation(guildId, 0, slot.id(), identity, now);
+      rotationPort.bootstrap(guildId, slot.id(), now);
+      cooldownPort.set(guildId, memberId, 0);
+      int balance = ledgerPort.currentBalance(guildId, memberId);
+      Optional<AnnouncementView> announcement =
+          config.hasAnnouncementChannel()
+              ? announcementAssembler.assemble(guildId)
+              : Optional.empty();
+      return new ProposeGameResult(Outcome.INSTANT_POPPED, 0, true, 0, balance, announcement);
+    }
+
+    // Affordability (FR-002): builds the balanced spend; throws InsufficientCoinsException if
+    // short.
     ledgerPort.lockAccount(guildId, memberId);
     int balance = ledgerPort.currentBalance(guildId, memberId);
     PostingPlan plan =
         QueueLedgerPolicy.planSpend(memberId, balance, proposeCost, AdjustmentType.QUEUE_PROPOSE);
 
-    GameIdentity identity = GameIdentity.of(game);
-    Instant now = Instant.now();
-    RotationState rotation = rotationPort.get(guildId);
-    List<QueueSlot> queued = queuePort.queued(guildId);
-
     // Bootstrap instant-pop (FR-024): with no current game and an empty queue, the first proposal
     // becomes this week's game immediately; counts as the proposer's game played with N = 0.
-    if (rotation.currentSlotId() == null && queued.isEmpty()) {
+    if (bootstrap) {
       UUID instanceId = UUID.randomUUID();
       QueueSlot slot =
           queuePort.append(

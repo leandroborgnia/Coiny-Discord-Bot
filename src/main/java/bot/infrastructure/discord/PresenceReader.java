@@ -4,10 +4,8 @@ import bot.domain.queue.CapturedGame;
 import java.util.List;
 import java.util.Optional;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Activity.ActivityType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.RichPresence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -48,21 +46,10 @@ public class PresenceReader {
           member.getOnlineStatus(),
           activities.size(),
           activities.stream().map(a -> a.getType() + "/" + a.getName()).toList());
-      return activities.stream()
-          .filter(activity -> activity.getType() == ActivityType.PLAYING)
-          .findFirst()
-          .map(PresenceReader::toCapturedGame);
+      return GameActivities.firstPlaying(activities);
     } catch (RuntimeException e) {
       log.warn("presence capture failed for {} in guild {}", memberId, guild.getId(), e);
       return Optional.empty();
     }
-  }
-
-  private static CapturedGame toCapturedGame(Activity activity) {
-    RichPresence rp = activity.isRich() ? activity.asRichPresence() : null;
-    Long applicationId = rp != null ? rp.getApplicationIdLong() : null;
-    String details = rp != null ? rp.getDetails() : null;
-    String state = rp != null ? rp.getState() : null;
-    return new CapturedGame(applicationId, activity.getName(), details, state, null, null, null);
   }
 }

@@ -37,16 +37,24 @@ public class JdaConfig {
     }
     // GUILD_PRESENCES + GUILD_MEMBERS are PRIVILEGED intents — both must be enabled for this bot in
     // the Discord Developer Portal (Bot → Privileged Gateway Intents). GUILD_PRESENCES is needed to
-    // read a member's live Rich Presence when they propose (FR-026); GUILD_MEMBERS lets us fetch a
-    // single member on demand. We retain NOTHING: MemberCachePolicy.NONE + ChunkingFilter.NONE keep
-    // memory flat at any scale, and PresenceReader reads the activity via an on-demand
-    // retrieveMembersByIds(true, id) only at propose time (Complexity Tracking; Principle V).
-    // CacheFlag.ACTIVITY enables activity data on the members we explicitly fetch.
+    // read a member's live Rich Presence (FR-026); GUILD_MEMBERS lets us fetch a single member on
+    // demand. GUILD_VOICE_STATES (non-privileged) is added for feature 005 so voice connections are
+    // observable. We retain members connected to voice (MemberCachePolicy.VOICE) WITH their
+    // activities (CacheFlag.ACTIVITY) and voice states (CacheFlag.VOICE_STATE), so the participation
+    // sweep can read who is in a designated voice channel and what they are playing straight from
+    // the in-memory cache (no REST) — bounded by the small set currently in voice. NOTE:
+    // createLight disables ALL cache flags, so both ACTIVITY and VOICE_STATE must be re-enabled
+    // explicitly; without VOICE_STATE, VoiceChannel.getMembers() is empty and nobody ever qualifies.
+    // PresenceReader still does its on-demand retrieveMembersByIds(true, id) at propose time
+    // (Complexity Tracking; Principle V).
     JDA jda =
         JDABuilder.createLight(
-                properties.token(), GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MEMBERS)
-            .enableCache(CacheFlag.ACTIVITY)
-            .setMemberCachePolicy(MemberCachePolicy.NONE)
+                properties.token(),
+                GatewayIntent.GUILD_PRESENCES,
+                GatewayIntent.GUILD_MEMBERS,
+                GatewayIntent.GUILD_VOICE_STATES)
+            .enableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE)
+            .setMemberCachePolicy(MemberCachePolicy.VOICE)
             .setChunkingFilter(ChunkingFilter.NONE)
             .addEventListeners(router, registrar, buttonRouter)
             .setActivity(Activity.playing("/ping"))

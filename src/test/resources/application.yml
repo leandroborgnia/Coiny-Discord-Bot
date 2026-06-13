@@ -8,3 +8,10 @@ spring:
   messages:
     basename: messages/coin-messages
     encoding: UTF-8
+
+# Participation earning (feature 005). The sweep itself is gated off (discord disabled), but
+# AccrueParticipationService still reads max-gap, so the block must be present in test config too.
+participation:
+  sweep:
+    tick: PT1M
+    max-gap: PT2M

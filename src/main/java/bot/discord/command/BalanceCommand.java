@@ -65,13 +65,17 @@ public class BalanceCommand implements SlashCommandHandler {
     return sb.toString();
   }
 
-  private String historyLine(MovementSummary m) {
+  String historyLine(MovementSummary m) {
+    boolean credit = m.type() == AdjustmentType.GRANT || m.type() == AdjustmentType.PARTICIPATION;
     String suffix = "";
-    if (m.type() == AdjustmentType.GRANT && m.forfeited() > 0) {
+    if (credit && m.forfeited() > 0) {
       suffix += messages.get("coin.reply.history.forfeited", m.forfeited());
     }
     if (m.reason() != null && !m.reason().isBlank()) {
       suffix += messages.get("coin.reply.history.reason", m.reason());
+    }
+    if (m.type() == AdjustmentType.PARTICIPATION) {
+      return messages.get("coin.reply.history.participation", m.credited(), suffix);
     }
     if (m.type() == AdjustmentType.GRANT) {
       return messages.get("coin.reply.history.grant", m.credited(), m.moderatorId(), suffix);

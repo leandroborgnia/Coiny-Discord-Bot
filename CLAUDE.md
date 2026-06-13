@@ -75,12 +75,12 @@
 - Run tests inside a container, or let dev and prod share a Postgres volume
 
 <!-- SPECKIT START -->
-Active feature: **004-game-queue**. For technologies, project structure,
+Active feature: **005-participation-earning**. For technologies, project structure,
 shell commands, and other important context, read the current plan and its design
 artifacts:
-- Plan: `specs/004-game-queue/plan.md`
-- Research: `specs/004-game-queue/research.md`
-- Data model: `specs/004-game-queue/data-model.md`
-- Contracts: `specs/004-game-queue/contracts/`
-- Quickstart: `specs/004-game-queue/quickstart.md`
+- Plan: `specs/005-participation-earning/plan.md`
+- Research: `specs/005-participation-earning/research.md`
+- Data model: `specs/005-participation-earning/data-model.md`
+- Contracts: `specs/005-participation-earning/contracts/`
+- Quickstart: `specs/005-participation-earning/quickstart.md`
 <!-- SPECKIT END -->
