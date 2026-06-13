@@ -75,12 +75,12 @@
 - Run tests inside a container, or let dev and prod share a Postgres volume
 
 <!-- SPECKIT START -->
-Active feature: **005-participation-earning**. For technologies, project structure,
+Active feature: **006-skip-jar**. For technologies, project structure,
 shell commands, and other important context, read the current plan and its design
 artifacts:
-- Plan: `specs/005-participation-earning/plan.md`
-- Research: `specs/005-participation-earning/research.md`
-- Data model: `specs/005-participation-earning/data-model.md`
-- Contracts: `specs/005-participation-earning/contracts/`
-- Quickstart: `specs/005-participation-earning/quickstart.md`
+- Plan: `specs/006-skip-jar/plan.md`
+- Research: `specs/006-skip-jar/research.md`
+- Data model: `specs/006-skip-jar/data-model.md`
+- Contracts: `specs/006-skip-jar/contracts/`
+- Quickstart: `specs/006-skip-jar/quickstart.md`
 <!-- SPECKIT END -->
