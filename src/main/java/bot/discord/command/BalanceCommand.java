@@ -80,6 +80,9 @@ public class BalanceCommand implements SlashCommandHandler {
     if (m.type() == AdjustmentType.GRANT) {
       return messages.get("coin.reply.history.grant", m.credited(), m.moderatorId(), suffix);
     }
+    if (m.type() == AdjustmentType.SKIP_JAR) {
+      return messages.get("coin.reply.history.skip-jar", m.requested(), suffix);
+    }
     return messages.get("coin.reply.history.deduct", m.requested(), m.moderatorId(), suffix);
   }
 }

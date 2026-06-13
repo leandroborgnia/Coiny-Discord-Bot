@@ -66,27 +66,58 @@ public class AdvanceRotationService {
     for (int i = 0; i < periods; i++) {
       week++;
       lastPop = RotationPolicy.nextPopAt(lastPop, 1); // += 7 days, once per applied period
-      Optional<QueueSlot> top = queuePort.top(guildId);
-      if (top.isPresent()) {
-        QueueSlot slot = top.get();
-        int n = queuePort.otherQueuedCount(guildId, slot.id()); // others still waiting at the pop
-        queuePort.markPlayed(slot.id(), week);
-        queuePort.shiftUp(guildId);
-        rotationPort.recordDesignation(guildId, week, slot.id(), slot.identity(), lastPop);
-        cooldownPort.decrementAll(guildId); // this played game counts down existing cooldowns first
-        cooldownPort.set(guildId, slot.proposerMemberId(), n); // then fix the proposer's fresh N
-        rotationPort.advanceClock(guildId, slot.id(), week, lastPop);
-        lastDesignated = slot;
-      } else {
-        rotationPort.recordDesignation(guildId, week, null, null, lastPop); // empty week
-        rotationPort.advanceClock(guildId, null, week, lastPop);
-        lastDesignated = null;
-      }
+      lastDesignated = popOnce(guildId, week, lastPop);
     }
 
     if (lastDesignated != null && configPort.get(guildId).hasAnnouncementChannel()) {
       return new AdvanceResult(periods, announcementAssembler.assemble(guildId));
     }
     return new AdvanceResult(periods, Optional.empty());
+  }
+
+  /**
+   * Force exactly ONE early pop (the skip-jar trigger, FR-010/FR-011), using the SAME deterministic
+   * rules as the weekly advance — top → markPlayed → shiftUp → designate → cooldowns (decrementAll
+   * before set) — differing only in that the new game's clock baseline is {@code now} (an early
+   * skip restarts dwell and the weekly clock). Reentrant within the contribution's transaction: it
+   * takes the same per-guild queue advisory lock the caller already holds. Returns the new current
+   * game's announcement when a channel is configured.
+   */
+  @Transactional
+  public AdvanceResult skip(long guildId, Instant now) {
+    queuePort.lockQueue(guildId);
+    RotationState state = rotationPort.get(guildId);
+    int week = state.currentWeekNumber() + 1;
+    QueueSlot designated = popOnce(guildId, week, now);
+    if (designated != null && configPort.get(guildId).hasAnnouncementChannel()) {
+      return new AdvanceResult(1, announcementAssembler.assemble(guildId));
+    }
+    return new AdvanceResult(1, Optional.empty());
+  }
+
+  /**
+   * One deterministic pop, shared by the weekly advance and the early skip. Designates the top game
+   * (markPlayed → shiftUp → recordDesignation), counts the played game down against existing
+   * cooldowns ({@code decrementAll} BEFORE {@code set} so the proposer's fresh N is not decremented
+   * by their own pop), fixes the proposer's "wait N games", and advances the clock to {@code
+   * popAt}. An empty queue designates nothing (the queue feature's existing empty-week behavior).
+   * Returns the designated slot, or {@code null} for an empty pop.
+   */
+  private QueueSlot popOnce(long guildId, int week, Instant popAt) {
+    Optional<QueueSlot> top = queuePort.top(guildId);
+    if (top.isPresent()) {
+      QueueSlot slot = top.get();
+      int n = queuePort.otherQueuedCount(guildId, slot.id()); // others still waiting at the pop
+      queuePort.markPlayed(slot.id(), week);
+      queuePort.shiftUp(guildId);
+      rotationPort.recordDesignation(guildId, week, slot.id(), slot.identity(), popAt);
+      cooldownPort.decrementAll(guildId); // this played game counts down existing cooldowns first
+      cooldownPort.set(guildId, slot.proposerMemberId(), n); // then fix the proposer's fresh N
+      rotationPort.advanceClock(guildId, slot.id(), week, popAt);
+      return slot;
+    }
+    rotationPort.recordDesignation(guildId, week, null, null, popAt); // empty week
+    rotationPort.advanceClock(guildId, null, week, popAt);
+    return null;
   }
 }

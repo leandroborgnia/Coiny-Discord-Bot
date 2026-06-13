@@ -44,10 +44,13 @@
 ## Source Layout
 - `bot.discord.command` — JDA slash-command handlers (thin)
 - `bot.application` — @Transactional services, the only place that talks to repositories
+  (e.g. `bot.application.skipjar` — the skip-jar vote/status/config services, feature 006)
 - `bot.domain` — pure Java; entities, value objects, domain services
+  (e.g. `bot.domain.skipjar` — skip threshold/ledger policies, config value object, ports, feature 006)
 - `bot.infrastructure` — Spring Data repositories, Flyway, external clients
   (e.g. `bot.infrastructure.art` — IGDB cover-art HTTP client; `bot.infrastructure.schedule` —
-  the weekly-rotation scheduler; `bot.infrastructure.discord` — JDA config + presence/button routers)
+  the weekly-rotation scheduler; `bot.infrastructure.discord` — JDA config + presence/button routers;
+  `bot.infrastructure.persistence.skipjar` — skip-jar JPA adapters, feature 006)
 
 ## Conventions
 - Java 21, records for DTOs/value objects, no Lombok on domain entities

@@ -31,4 +31,12 @@ public record PostingLine(LedgerAccount account, Long memberId, int signedAmount
   public static PostingLine pot(int signedAmount) {
     return new PostingLine(LedgerAccount.POT, null, signedAmount);
   }
+
+  /**
+   * The per-guild skip-jar pot — the balanced counter-party for a skip-jar contribution (feature
+   * 006). Carries no member id and is never refunded.
+   */
+  public static PostingLine skipPot(int signedAmount) {
+    return new PostingLine(LedgerAccount.SKIP_POT, null, signedAmount);
+  }
 }

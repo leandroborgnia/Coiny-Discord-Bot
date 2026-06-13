@@ -44,6 +44,12 @@ queue:
       client-id: ${IGDB_CLIENT_ID:}
       client-secret: ${IGDB_CLIENT_SECRET:}
 
+# Skip jar (feature 006). Documentation of the domain defaults — GuildSkipJarConfig.defaults
+# is the authoritative source (the absent-row case); per-guild rows override these.
+skipjar:
+  default-floor: 3        # minimum contributions to skip, regardless of majority
+  default-dwell: PT24H    # 24 h a game must be current before its jar opens (stored as dwell_seconds)
+
 # Participation earning (feature 005).
 participation:
   sweep:

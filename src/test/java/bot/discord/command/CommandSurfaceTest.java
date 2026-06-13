@@ -35,7 +35,9 @@ class CommandSurfaceTest extends AbstractPostgresIntegrationTest {
             "queue-view",
             "queue-bump",
             "queue-config",
-            "participation-config");
+            "participation-config",
+            "skip",
+            "skip-config");
   }
 
   @Test

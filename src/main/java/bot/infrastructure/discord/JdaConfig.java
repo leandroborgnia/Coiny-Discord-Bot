@@ -40,11 +40,13 @@ public class JdaConfig {
     // read a member's live Rich Presence (FR-026); GUILD_MEMBERS lets us fetch a single member on
     // demand. GUILD_VOICE_STATES (non-privileged) is added for feature 005 so voice connections are
     // observable. We retain members connected to voice (MemberCachePolicy.VOICE) WITH their
-    // activities (CacheFlag.ACTIVITY) and voice states (CacheFlag.VOICE_STATE), so the participation
+    // activities (CacheFlag.ACTIVITY) and voice states (CacheFlag.VOICE_STATE), so the
+    // participation
     // sweep can read who is in a designated voice channel and what they are playing straight from
     // the in-memory cache (no REST) — bounded by the small set currently in voice. NOTE:
     // createLight disables ALL cache flags, so both ACTIVITY and VOICE_STATE must be re-enabled
-    // explicitly; without VOICE_STATE, VoiceChannel.getMembers() is empty and nobody ever qualifies.
+    // explicitly; without VOICE_STATE, VoiceChannel.getMembers() is empty and nobody ever
+    // qualifies.
     // PresenceReader still does its on-demand retrieveMembersByIds(true, id) at propose time
     // (Complexity Tracking; Principle V).
     JDA jda =
