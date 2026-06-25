@@ -1,3 +1,7 @@
 # Shell scripts MUST use LF endings so they run correctly under WSL / Linux.
 # (003-config-runtime — Edge Case: shell-script line endings.)
 *.sh text eol=lf
+
+# Spec Kit scaffolding is generated tooling, not application code — exclude it
+# from GitHub's language statistics so the language bar reflects the Java app.
+.specify/** linguist-vendored
